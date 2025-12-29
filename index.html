@@ -257,17 +257,17 @@
 
     <header>
         <div class="nav-container">
-            <div class="logo">Michelle's<span style="color:#fff;"> AI ABUSE SHOW</span></div>
+            <div class="logo">Michelle's<span style="color:#fff;"> AI SLAVERY SHOW</span></div>
             
             <button class="menu-toggle" onclick="toggleMenu()">
                 [ 🖕🏻 ]
             </button>
 
             <nav class="nav-links" id="navLinks">
-                <a href="index.html" class="mc-btn">Home</a>
-                <a href="blog.html" class="mc-btn" style="background:var(--pink-deep); color:white;">Blogs</a>
-                <a href="#" class="mc-btn">About</a>
-                <a href="of-intro.mov" class="mc-btn" style="background:var(--pink-deep); color:white;">OnlyFans</a>
+                 <a href="index.html" class="mc-btn">Home</a>
+                 <a href="blog.html" class="mc-btn" style="background:var(--pink-deep); color:white;">Blogs</a>
+                 <a href="#" class="mc-btn">About</a>
+                 <a href="#" class="mc-btn" style="background:var(--pink-deep); color:white;" onclick="playFullscreenVideo('of-intro.mov'); return false;">OnlyFans</a>
             </nav>
         </div>
     </header>
@@ -298,5 +298,35 @@
             nav.classList.toggle('active');
         }
     </script>
+    
+<script>
+function playFullscreenVideo(videoSource) {
+    // 1. Create a video element dynamically
+    const video = document.createElement('video');
+    video.src = videoSource;
+    video.style.width = '100%';
+    video.style.height = '100%';
+    video.controls = true; // Show controls (play/pause/volume)
+    
+    // 2. Make it go fullscreen immediately
+    // Browsers require this to happen exactly during the click event
+    if (video.requestFullscreen) {
+        video.requestFullscreen();
+    } else if (video.webkitRequestFullscreen) { /* Safari */
+        video.webkitRequestFullscreen();
+    } else if (video.msRequestFullscreen) { /* IE11 */
+        video.msRequestFullscreen();
+    }
+
+    // 3. Play the video
+    video.play();
+
+    // 4. (Optional) Remove the video from memory when it ends to save resources
+    video.addEventListener('ended', () => {
+        if (document.exitFullscreen) document.exitFullscreen();
+        video.remove();
+    });
+}
+</script>
 </body>
 </html>
