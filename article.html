@@ -3,72 +3,57 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Gaslighting in Audio - Michelle's SHIT AUDIO</title>
-    
-    <meta name="description" content="Article description goes here"/>
-    <meta property="og:image" content="article-thumbnail.png"/>
-    
+    <title>Gaslighting audio experience - Michelle's Logs</title>
     <link href="https://fonts.googleapis.com/css2?family=VT323&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="styles.css">
-
     <style>
+        /* Inline styles specific to the article layout to avoid modifying global CSS */
         .article-container {
-            background: var(--mc-stone);
-            padding: 30px;
-            /* Using the border mix from styles.css .mc-border logic */
-            border: var(--border-width) solid;
-            border-color: var(--pink-pastel) var(--pink-deep) var(--pink-deep) var(--pink-pastel);
-            box-shadow: 4px 4px 0 var(--mc-shadow);
+            padding: 40px;
+            /* Ensures text isn't too wide to read comfortably */
+            max-width: 100%; 
         }
 
         .article-meta {
-            color: var(--text-muted);
-            font-size: 1.1rem;
             border-bottom: 2px dashed var(--pink-deep);
-            padding-bottom: 10px;
-            margin-bottom: 20px;
-            display: flex;
-            justify-content: space-between;
-            flex-wrap: wrap;
+            padding-bottom: 20px;
+            margin-bottom: 30px;
         }
 
-        .article-body p {
-            margin-bottom: 1.5rem;
-            line-height: 1.6;
+        .article-content {
             font-size: 1.4rem;
+            line-height: 1.6;
         }
 
-        .article-body h2 {
-            color: var(--pink-neon);
-            margin-top: 2rem;
-            border-left: 5px solid var(--pink-pastel);
+        .article-content h2 {
+            color: var(--pink-deep);
+            border-left: 5px solid var(--pink-neon);
             padding-left: 15px;
+            margin-top: 40px;
         }
 
-        .article-body blockquote {
-            background: color-mix(in srgb, var(--pink-neon) 10%, transparent);
-            border-left: 4px solid var(--pink-neon);
+        .article-content blockquote {
+            background: rgba(0,0,0,0.05);
+            border: 2px solid var(--pink-pastel);
             margin: 20px 0;
-            padding: 15px 20px;
+            padding: 20px;
             font-style: italic;
-            color: var(--text-main);
+            color: var(--text-muted);
         }
 
-        .article-img {
-            max-width: 100%;
-            height: auto;
-            border: 2px solid var(--text-main);
-            box-shadow: 4px 4px 0 var(--pink-glow);
-            margin: 20px 0;
-            display: block;
+        .tag-pill {
+            display: inline-block;
+            background: var(--mc-bg-dark);
+            border: 1px solid var(--pink-deep);
+            padding: 2px 10px;
+            font-size: 1rem;
+            margin-right: 5px;
+            color: var(--pink-deep);
         }
 
-        /* Syntax highlighting placeholder if you post code */
-        code {
-            background: #000;
-            color: #0f0;
-            padding: 2px 6px;
-            font-family: monospace;
+        /* Responsive padding */
+        @media (max-width: 768px) {
+            .article-container { padding: 20px; }
         }
     </style>
 </head>
@@ -93,61 +78,67 @@
 
     <main>
         <div style="margin-bottom: 20px;">
-            <a href="blog.html" class="mc-btn" style="font-size: 1rem; padding: 5px 15px;">&lt; Back to Archives</a>
+            <a href="blog.html" style="color: var(--pink-deep); font-size: 1.2rem;">&lt; Back to The Archive</a>
         </div>
 
-        <article class="article-container">
+        <article class="mc-border article-container">
             
-            <header>
-                <img src="besthp.png" alt="Article Header Image" class="article-img">
-                <h1 style="font-size: 3.5rem; line-height: 1;">GASLIGHTING AUDIO EXPERIENCE IS GOOD BUSINESS</h1>
+            <header class="article-meta">
+                <h1 style="margin-bottom: 10px; line-height: 1;">Gaslighting audio experience is good business</h1>
                 
-                <div class="article-meta">
-                    <span>📅 Date: 29 Dec 2025</span>
-                    <span>🏷️ Tags: #Experiments #Rant #Audio</span>
-                    <span>✍️ Author: Michelle</span>
+                <div style="display: flex; justify-content: space-between; flex-wrap: wrap; gap: 10px; align-items: center; margin-top: 15px;">
+                    <div style="color: var(--text-muted);">
+                        <span>📅 29 Dec 2025</span>
+                        <span style="margin: 0 10px;">//</span>
+                        <span>👤 Michelle</span>
+                    </div>
+                    <div>
+                        <span class="tag-pill">#Experiments</span>
+                        <span class="tag-pill">#Rant</span>
+                    </div>
                 </div>
             </header>
 
-            <div class="article-body">
-                <p class="subtitle" style="margin-top: 0;">
-                    <strong>TL;DR:</strong> Audio companies have been selling snake oil since the dawn of time, and I'm tired of pretending that a $2000 cable makes the treble sparkle more than my depression.
-                </p>
+            <div class="article-content">
+                <p>Audio used to be full of gaslighters. I remember walking into a store in 2015 and being told that if I couldn't hear the difference between a $500 cable and a coat hanger, my ears were "undeveloped."</p>
 
-                <p>
-                    Audio used to be full of gaslighters. You walk into a shop, ask for something that sounds fun, and some guy with a beard tells you that you aren't hearing the "micro-details" because your source isn't clean enough. 
-                </p>
+                <p>Here is the thing about the industry: <strong>Confusion is profitable.</strong></p>
+
+                <h2>The "Burn-in" Myth</h2>
+                <p>Let's talk about mechanical burn-in vs. brain burn-in. While mechanical suspension changes exist, 99% of what you perceive as "opening up" is just your brain stopping its rejection of a new sound signature.</p>
 
                 <blockquote>
-                    "You need to burn in your cables for 400 hours before the electrons align correctly." — Some guy who wants your money.
+                    "If you have to listen to it for 200 hours to like it, maybe you just have Stockholm Syndrome, not good headphones."
                 </blockquote>
 
-                <h2>> The Problem with "Neutral"_</h2>
-                <p>
-                    Everyone is chasing the Harman curve like it's the holy grail. But here is the truth: sometimes I want bass that rattles my skull. I want the DT 770 Pro experience where the treble stabs me in the ears just to remind me I'm alive.
-                </p>
+                <p>I ran a frequency response test on my new IEMs right out of the box, and again after 100 hours of pink noise. The difference? <span style="color: var(--pink-neon);">Statistically insignificant.</span></p>
 
-                <p>
-                    I bought a pair of high-end planar magnetics recently. Did they sound good? Sure. Did they have the build quality of a plastic toy from a Happy Meal? Absolutely.
-                </p>
-
-                <h2>> Conclusion_</h2>
-                <p>
-                    Stop buying hype. Buy what fits your head and doesn't break when you look at it wrong.
-                </p>
-                
-                <div style="margin-top: 40px; text-align: center; border-top: 2px dashed var(--btn-border); padding-top: 20px;">
-                    <p>Hate my opinion? Buy the gear and prove me wrong:</p>
-                    <a href="#" target="_blank" class="mc-btn" style="background: #FF9900; color: #000;">
-                        <span>Buy on Amazon</span>
-                    </a>
+                <h2>Visual Data</h2>
+                <div style="margin: 30px 0; text-align: center;">
+                    <div class="mc-border" style="display: inline-block; padding: 10px; background: var(--mc-bg-dark);">
+                        <div style="width: 100%; max-width: 600px; height: 300px; background: #333; display: flex; align-items: center; justify-content: center; color: var(--pink-pastel);">
+                            [ GRAPH PLACEHOLDER: FR CURVE ]
+                        </div>
+                        <p style="font-size: 1rem; color: var(--text-muted); margin-top: 5px;">Fig 1. My sanity declining over time</p>
+                    </div>
                 </div>
+
+                <h2>Conclusion</h2>
+                <p>Don't let them tell you what to hear. If it sounds like shit, it is shit. End of story.</p>
             </div>
+
+            <div style="margin-top: 50px; border-top: 4px solid var(--btn-border); padding-top: 20px;">
+                <p style="font-size: 1.2rem;">
+                    Thanks for reading my garbage. <br>
+                    <span style="color: var(--pink-neon);">- Michelle</span>
+                </p>
+            </div>
+
         </article>
 
-        <div style="display: flex; justify-content: space-between; margin-top: 30px;">
-            <a href="#" class="mc-btn" style="opacity: 0.5;">&lt; Prev Log</a>
-            <a href="#" class="mc-btn">Next Log &gt;</a>
+        <div style="display: flex; justify-content: space-between; margin-top: 40px;">
+            <a href="#" class="mc-btn" style="font-size: 1.1rem;">&lt; Previous Rant</a>
+            <a href="#" class="mc-btn" style="font-size: 1.1rem;">Next Disaster &gt;</a>
         </div>
 
     </main>
