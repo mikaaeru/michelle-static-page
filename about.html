@@ -252,6 +252,16 @@
                 grid-template-columns: 1fr; /* Single column on phones */
             }
         }
+        .profile-img {
+            width: 80px;          /* Adjust size here */
+            height: 80px;         /* Must match width for a perfect circle */
+            border-radius: 50%;   /* This creates the circle */
+            object-fit: cover;    /* Prevents the image from stretching */
+            border: 3px solid var(--pink-pastel); /* Optional: matches your theme */
+            box-shadow: 2px 2px 0 #000;           /* Optional: matches your 3D style */
+            display: block;
+            margin: 0 auto 15px auto;             /* Centers the image and adds bottom spacing */
+        }
     </style>
 </head>
 <body>
@@ -275,7 +285,7 @@
 
     <main>
         <section class="hero mc-border">
-            <img src="profile.png" alt="Icon" class="hero-icon">
+            <img src="profile.png" alt="Michelle" class="profile-img">
             <h1>My name is Michelle</h1>
             <p class="subtitle">Jesus Christ, you came here? Why even bother visiting this site, since there’s practically nothing here. My name is Michelle and I’m not racist because I’m neither white or stereotypically asian. I’m just myself and I don’t care how would anyone perceive me, although I still prefer a small talk about something other than quieting alone.
             </p>
