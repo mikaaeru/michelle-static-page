@@ -262,6 +262,26 @@
             display: block;
             margin: 0 auto 15px auto;             /* Centers the image and adds bottom spacing */
         }
+        .social-links {
+            display: flex;
+            justify-content: center; /* Centers the row of buttons */
+            gap: 15px;
+            margin: 20px 0;
+            flex-wrap: wrap; /* Allows them to stack on very small screens */
+        }
+        .social-links .mc-btn {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px; /* Space between icon and text */
+            padding: 8px 15px;
+            font-size: 1.1rem;
+            text-decoration: none;
+        }
+        /* Optional: Slight wiggle on hover for icons */
+        .social-links .mc-btn:hover i {
+            transform: scale(1.2);
+            transition: transform 0.2s;
+        }
     </style>
 </head>
 <body>
