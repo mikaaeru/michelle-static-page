@@ -203,6 +203,16 @@
             .mc-btn { width: 100%; text-align: center; }
             .blog-grid { grid-template-columns: 1fr; }
         }
+        .profile-img {
+            width: 80px;          /* Adjust size here */
+            height: 80px;         /* Must match width for a perfect circle */
+            border-radius: 50%;   /* This creates the circle */
+            object-fit: cover;    /* Prevents the image from stretching */
+            border: 3px solid var(--pink-pastel); /* Optional: matches your theme */
+            box-shadow: 2px 2px 0 #000;           /* Optional: matches your 3D style */
+            display: block;
+            margin: 0 auto 15px auto;             /* Centers the image and adds bottom spacing */
+        }
     </style>
 </head>
 <body>
