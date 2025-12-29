@@ -3,11 +3,10 @@
 ### ⚠️ Please, GTFO I'm stupid
 
 ### Why am I here?
-* To make things pink.
-* To mine for dopamine.
-* To pretend I understand how Git works (I don't, I'm just copy-pasting what the AI tells me).
+* Make a landing page.
+* To pretend I know how tech works (I vibecoded this shit)
 
 ### 🛠️ Technical Skills
-* **HTML/CSS:** I can change colors until it hurts your eyes.
-* 
+* **Linux:** I once performed `sudo rm -rf / --no-preserve-root` 
+
 > "If it works, don't touch it. If it breaks, I'm deleting this repo (or I can undo)."
