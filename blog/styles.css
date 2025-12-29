@@ -1,0 +1,374 @@
+/* --- styles.css --- */
+:root {
+    /* --- DEFAULT: LIGHT MODE (Pink & White) --- */
+    --mc-bg-dark: #ffffff;       /* Pure White Background */
+    --mc-stone: #fff0f5;         /* Lavender Blush elements */
+    --mc-shadow: #dddddd;        /* Light grey shadow */
+    
+    /* Text */
+    --text-main: #222222;        /* Dark Grey text */
+    --text-muted: #666666;       /* Medium Grey text */
+    
+    /* Theme Colors */
+    --pink-neon: #ff1493;        /* Deep Pink */
+    --pink-pastel: #ff69b4;      /* Hot Pink */
+    --pink-deep: #c71585;        /* Violet Red */
+    --pink-glow: rgba(255, 105, 180, 0.3);
+
+    /* Misc */
+    --border-color: #ff69b4;     /* Pink borders in light mode */
+    --btn-border: #888888;
+    --logo-color: #ff1493;
+    --logo-shadow: #ffd1dc;
+    --bg-pattern: #f0f0f0;       /* Light grey pixel pattern */
+
+    /* Spacing & Sizes */
+    --border-width: 4px;
+    --container-width: 1000px;
+}
+
+/* --- AUTOMATIC DARK MODE SWITCH --- */
+@media (prefers-color-scheme: dark) {
+    :root {
+        /* --- OVERRIDE: DARK MODE (Original Minecraft Style) --- */
+        --mc-bg-dark: #121212;
+        --mc-stone: #3a3a3a;
+        --mc-shadow: #1e1e1e;
+        
+        /* Text */
+        --text-main: #ffffff;
+        --text-muted: #cccccc;
+        
+        /* Theme Colors */
+        --pink-neon: #ff6ec7;       /* Bright Neon Pink */
+        --pink-pastel: #ff92df;     /* Pastel Pink text */
+        --pink-deep: #b04286;       /* Darker Pink */
+        --pink-glow: rgba(255, 110, 199, 0.5);
+
+        /* Misc */
+        --border-color: #ff92df;
+        --btn-border: #000000;
+        --logo-color: #ff6ec7;
+        --logo-shadow: #000000;
+        --bg-pattern: #1a1a1a;      /* Dark grey pixel pattern */
+    }
+}
+
+* {
+    box-sizing: border-box;
+}
+
+body {
+    margin: 0;
+    padding: 0;
+    background-color: var(--mc-bg-dark);
+    color: var(--text-main);
+    font-family: 'VT323', monospace;
+    font-size: 1.3rem;
+    
+    /* Dynamic Background Pattern */
+    background-image: 
+        linear-gradient(45deg, var(--bg-pattern) 25%, transparent 25%, transparent 75%, var(--bg-pattern) 75%, var(--bg-pattern)),
+        linear-gradient(45deg, var(--bg-pattern) 25%, transparent 25%, transparent 75%, var(--bg-pattern) 75%, var(--bg-pattern));
+    background-size: 60px 60px;
+    background-position: 0 0, 30px 30px;
+    overflow-x: hidden;
+    transition: background-color 0.3s, color 0.3s;
+}
+
+a { text-decoration: none; color: inherit; }
+
+/* --- UTILS --- */
+.mc-border {
+    border: var(--border-width) solid;
+    border-color: 
+        var(--pink-pastel)    /* Top */
+        var(--pink-deep)      /* Right */
+        var(--pink-deep)      /* Bottom */
+        var(--pink-pastel);   /* Left */
+    background-color: var(--mc-stone);
+    box-shadow: 4px 4px 0 var(--mc-shadow); /* Dynamic Shadow */
+}
+
+/* --- HEADER --- */
+header {
+    /* Semi-transparent background adapts to mode */
+    background: color-mix(in srgb, var(--mc-bg-dark) 90%, transparent); 
+    border-bottom: var(--border-width) solid var(--pink-deep);
+    position: sticky;
+    top: 0;
+    z-index: 100;
+    padding: 1rem 0;
+    box-shadow: 0 4px 15px var(--pink-glow);
+    backdrop-filter: blur(5px);
+}
+
+.nav-container {
+    max-width: var(--container-width);
+    margin: 0 auto;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 0 20px;
+}
+
+.logo {
+    font-size: 2.5rem;
+    color: var(--logo-color);
+    text-shadow: 3px 3px 0 var(--logo-shadow);
+    letter-spacing: 2px;
+    animation: float 3s ease-in-out infinite;
+}
+
+/* This span handles the "SHIT AUDIO" part */
+.logo span {
+    color: var(--text-main) !important;
+}
+
+/* --- NAVIGATION --- */
+.nav-links {
+    display: flex;
+    gap: 15px;
+}
+
+.mc-btn {
+    display: inline-block;
+    padding: 10px 25px;
+    background: var(--mc-stone);
+    color: var(--pink-pastel);
+    text-transform: uppercase;
+    font-size: 1.4rem;
+    
+    /* 3D Border Trick */
+    box-shadow: 
+        inset 3px 3px 0 rgba(255,255,255,0.2),
+        inset -3px -3px 0 rgba(0,0,0,0.2),
+        3px 3px 0 var(--btn-border);
+    border: 2px solid var(--btn-border);
+    
+    transition: all 0.1s;
+}
+
+/* Dark Mode Text Override for Buttons to ensure contrast */
+@media (prefers-color-scheme: dark) {
+    .mc-btn { color: var(--pink-pastel); }
+}
+@media (prefers-color-scheme: light) {
+    .mc-btn { color: var(--pink-deep); font-weight: bold; }
+}
+
+.mc-btn:hover {
+    background: var(--pink-deep);
+    color: #fff;
+    transform: translateY(-2px);
+    box-shadow: 
+        inset 3px 3px 0 rgba(255,255,255,0.2),
+        inset -3px -3px 0 rgba(0,0,0,0.2),
+        3px 5px 0 var(--btn-border),
+        0 0 15px var(--pink-neon);
+    cursor: pointer;
+}
+
+.mc-btn:active {
+    transform: translateY(2px);
+    box-shadow: 0 0 0 var(--btn-border);
+}
+
+.menu-toggle {
+    display: none;
+    font-size: 2rem;
+    background: none;
+    border: none;
+    color: var(--pink-neon);
+    cursor: pointer;
+}
+
+/* --- MAIN CONTENT --- */
+main {
+    max-width: var(--container-width);
+    margin: 40px auto;
+    padding: 0 20px;
+}
+
+.hero {
+    text-align: center;
+    margin-bottom: 60px;
+    padding: 40px;
+    background: color-mix(in srgb, var(--mc-bg-dark) 60%, transparent);
+    border: 4px dashed var(--pink-deep);
+}
+
+.hero-mini {
+    text-align: left; 
+    margin-bottom: 40px; 
+    padding: 20px;
+    border-bottom: 4px dashed var(--pink-deep);
+}
+
+h1 { 
+    font-size: 3rem; 
+    margin: 0; 
+    color: var(--pink-pastel); 
+    text-shadow: 4px 4px 0 var(--mc-shadow); 
+}
+
+p.subtitle { 
+    color: var(--text-muted); 
+    font-size: 1.5rem; 
+    margin-top: 10px; 
+}
+
+/* --- BLOG GRID --- */
+.blog-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+    gap: 25px;
+}
+
+.blog-card {
+    background: color-mix(in srgb, var(--mc-stone) 95%, black);
+    padding: 20px;
+    position: relative;
+    transition: transform 0.2s;
+    display: flex;
+    flex-direction: column;
+    border: 2px solid var(--btn-border);
+}
+
+.blog-card:hover {
+    transform: scale(1.02);
+    z-index: 10;
+    border-color: var(--pink-neon);
+    box-shadow: 4px 4px 0 var(--pink-pastel);
+}
+
+.card-header {
+    background: var(--mc-bg-dark);
+    height: 150px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin-bottom: 15px;
+    border: 2px solid var(--btn-border);
+    font-size: 4rem; 
+    overflow: hidden;
+}
+
+.card-title {
+    color: var(--pink-neon);
+    font-size: 1.8rem;
+    margin: 0 0 10px 0;
+    line-height: 1.1;
+}
+
+.card-meta {
+    font-size: 1rem;
+    color: var(--text-muted);
+    margin-bottom: 15px;
+    border-bottom: 2px solid var(--pink-deep);
+    padding-bottom: 5px;
+    display: inline-block;
+    width: 100%;
+}
+
+.card-excerpt {
+    font-size: 1.1rem;
+    color: var(--text-main);
+    margin-bottom: 20px;
+    flex-grow: 1;
+}
+
+/* --- SPECIFIC: ABOUT PAGE --- */
+.profile-img {
+    width: 160px;          
+    height: 160px;         
+    border-radius: 50%;   
+    object-fit: cover;    
+    border: 3px solid var(--pink-pastel); 
+    box-shadow: 2px 2px 0 var(--mc-shadow);           
+    display: block;
+    margin: 0 auto 15px auto;             
+}
+
+.social-links {
+    display: flex;
+    justify-content: center; 
+    gap: 15px;
+    margin: 20px 0;
+    flex-wrap: wrap; 
+}
+
+.social-links .mc-btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px; 
+    padding: 8px 15px;
+    font-size: 1.1rem;
+    text-decoration: none;
+}
+
+.social-links .mc-btn:hover i {
+    transform: scale(1.2);
+    transition: transform 0.2s;
+}
+
+/* --- SPECIFIC: BLOG PAGINATION --- */
+.pagination {
+    display: flex;
+    justify-content: center;
+    gap: 10px;
+    margin-top: 50px;
+}
+
+/* --- FOOTER --- */
+footer {
+    margin-top: 80px;
+    background: var(--mc-shadow); /* Slightly darker than bg */
+    padding: 40px 20px;
+    text-align: center;
+    border-top: 4px solid var(--pink-neon);
+    color: var(--pink-pastel);
+}
+
+/* --- ANIMATIONS --- */
+@keyframes float {
+    0% { transform: translateY(0px); }
+    50% { transform: translateY(-10px); }
+    100% { transform: translateY(0px); }
+}
+
+/* --- RESPONSIVE MEDIA QUERIES --- */
+@media (max-width: 768px) {
+    .nav-container {
+        flex-wrap: wrap;
+    }
+
+    .menu-toggle {
+        display: block; 
+    }
+
+    .nav-links {
+        display: none; 
+        width: 100%;
+        flex-direction: column;
+        margin-top: 20px;
+    }
+
+    .nav-links.active {
+        display: flex; 
+        background: var(--mc-bg-dark);
+        border: 2px solid var(--pink-deep);
+        padding: 15px;
+    }
+
+    .mc-btn {
+        width: 100%;
+        text-align: center;
+    }
+
+    h1 { font-size: 2rem; }
+    
+    .blog-grid {
+        grid-template-columns: 1fr; 
+    }
+}
