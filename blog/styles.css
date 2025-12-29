@@ -372,3 +372,52 @@ footer {
         grid-template-columns: 1fr; 
     }
 }
+
+/* Inline styles specific to the article layout to avoid modifying global CSS */
+        .article-container {
+            padding: 40px;
+            /* Ensures text isn't too wide to read comfortably */
+            max-width: 100%; 
+        }
+
+        .article-meta {
+            border-bottom: 2px dashed var(--pink-deep);
+            padding-bottom: 20px;
+            margin-bottom: 30px;
+        }
+
+        .article-content {
+            font-size: 1.4rem;
+            line-height: 1.6;
+        }
+
+        .article-content h2 {
+            color: var(--pink-deep);
+            border-left: 5px solid var(--pink-neon);
+            padding-left: 15px;
+            margin-top: 40px;
+        }
+
+        .article-content blockquote {
+            background: rgba(0,0,0,0.05);
+            border: 2px solid var(--pink-pastel);
+            margin: 20px 0;
+            padding: 20px;
+            font-style: italic;
+            color: var(--text-muted);
+        }
+
+        .tag-pill {
+            display: inline-block;
+            background: var(--mc-bg-dark);
+            border: 1px solid var(--pink-deep);
+            padding: 2px 10px;
+            font-size: 1rem;
+            margin-right: 5px;
+            color: var(--pink-deep);
+        }
+
+        /* Responsive padding */
+        @media (max-width: 768px) {
+            .article-container { padding: 20px; }
+        }
