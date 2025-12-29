@@ -1,23 +1,57 @@
 /* --- styles.css --- */
 :root {
-    /* --- COLOR PALETTE (LIGHT MODE) --- */
-    /* Backgrounds */
-    --mc-bg-dark: #ffffff;       /* Main background: Pure White */
-    --mc-stone: #fff0f5;         /* Elements (Buttons/Cards): Lavender Blush (Very light pink) */
+    /* --- DEFAULT: LIGHT MODE (Pink & White) --- */
+    --mc-bg-dark: #ffffff;       /* Pure White Background */
+    --mc-stone: #fff0f5;         /* Lavender Blush elements */
+    --mc-shadow: #dddddd;        /* Light grey shadow */
     
-    /* Text Colors */
-    --text-main: #222222;        /* Main text: Almost Black */
-    --text-muted: #666666;       /* Subtitles: Dark Grey */
+    /* Text */
+    --text-main: #222222;        /* Dark Grey text */
+    --text-muted: #666666;       /* Medium Grey text */
     
-    /* The PINK ACCENTS */
-    --pink-neon: #ff1493;        /* Deep Pink (High Contrast) */
-    --pink-pastel: #ff69b4;      /* Hot Pink (for borders/accents) */
-    --pink-deep: #c71585;        /* Medium Violet Red (for depth/shadows) */
+    /* Theme Colors */
+    --pink-neon: #ff1493;        /* Deep Pink */
+    --pink-pastel: #ff69b4;      /* Hot Pink */
+    --pink-deep: #c71585;        /* Violet Red */
     --pink-glow: rgba(255, 105, 180, 0.3);
+
+    /* Misc */
+    --border-color: #ff69b4;     /* Pink borders in light mode */
+    --btn-border: #888888;
+    --logo-color: #ff1493;
+    --logo-shadow: #ffd1dc;
+    --bg-pattern: #f0f0f0;       /* Light grey pixel pattern */
 
     /* Spacing & Sizes */
     --border-width: 4px;
     --container-width: 1000px;
+}
+
+/* --- AUTOMATIC DARK MODE SWITCH --- */
+@media (prefers-color-scheme: dark) {
+    :root {
+        /* --- OVERRIDE: DARK MODE (Original Minecraft Style) --- */
+        --mc-bg-dark: #121212;
+        --mc-stone: #3a3a3a;
+        --mc-shadow: #1e1e1e;
+        
+        /* Text */
+        --text-main: #ffffff;
+        --text-muted: #cccccc;
+        
+        /* Theme Colors */
+        --pink-neon: #ff6ec7;       /* Bright Neon Pink */
+        --pink-pastel: #ff92df;     /* Pastel Pink text */
+        --pink-deep: #b04286;       /* Darker Pink */
+        --pink-glow: rgba(255, 110, 199, 0.5);
+
+        /* Misc */
+        --border-color: #ff92df;
+        --btn-border: #000000;
+        --logo-color: #ff6ec7;
+        --logo-shadow: #000000;
+        --bg-pattern: #1a1a1a;      /* Dark grey pixel pattern */
+    }
 }
 
 * {
@@ -28,17 +62,18 @@ body {
     margin: 0;
     padding: 0;
     background-color: var(--mc-bg-dark);
-    color: var(--text-main); /* Changed to dark text */
+    color: var(--text-main);
     font-family: 'VT323', monospace;
     font-size: 1.3rem;
     
-    /* Inverted Background Pattern: Light Grey pixels on White */
+    /* Dynamic Background Pattern */
     background-image: 
-        linear-gradient(45deg, #f0f0f0 25%, transparent 25%, transparent 75%, #f0f0f0 75%, #f0f0f0),
-        linear-gradient(45deg, #f0f0f0 25%, transparent 25%, transparent 75%, #f0f0f0 75%, #f0f0f0);
+        linear-gradient(45deg, var(--bg-pattern) 25%, transparent 25%, transparent 75%, var(--bg-pattern) 75%, var(--bg-pattern)),
+        linear-gradient(45deg, var(--bg-pattern) 25%, transparent 25%, transparent 75%, var(--bg-pattern) 75%, var(--bg-pattern));
     background-size: 60px 60px;
     background-position: 0 0, 30px 30px;
     overflow-x: hidden;
+    transition: background-color 0.3s, color 0.3s;
 }
 
 a { text-decoration: none; color: inherit; }
@@ -52,19 +87,20 @@ a { text-decoration: none; color: inherit; }
         var(--pink-deep)      /* Bottom */
         var(--pink-pastel);   /* Left */
     background-color: var(--mc-stone);
-    /* Lighter shadow for light mode */
-    box-shadow: 4px 4px 0 #ddd;
+    box-shadow: 4px 4px 0 var(--mc-shadow); /* Dynamic Shadow */
 }
 
 /* --- HEADER --- */
 header {
-    background: rgba(255, 255, 255, 0.95); /* White glass effect */
-    border-bottom: var(--border-width) solid var(--pink-pastel);
+    /* Semi-transparent background adapts to mode */
+    background: color-mix(in srgb, var(--mc-bg-dark) 90%, transparent); 
+    border-bottom: var(--border-width) solid var(--pink-deep);
     position: sticky;
     top: 0;
     z-index: 100;
     padding: 1rem 0;
     box-shadow: 0 4px 15px var(--pink-glow);
+    backdrop-filter: blur(5px);
 }
 
 .nav-container {
@@ -78,16 +114,15 @@ header {
 
 .logo {
     font-size: 2.5rem;
-    color: var(--pink-neon);
-    /* Removed black text shadow, added soft pink glow */
-    text-shadow: 2px 2px 0 #ffd1dc; 
+    color: var(--logo-color);
+    text-shadow: 3px 3px 0 var(--logo-shadow);
     letter-spacing: 2px;
     animation: float 3s ease-in-out infinite;
 }
 
-/* Force the inner span (SHIT AUDIO) to be Pink instead of White */
+/* This span handles the "SHIT AUDIO" part */
 .logo span {
-    color: var(--pink-deep) !important;
+    color: var(--text-main) !important;
 }
 
 /* --- NAVIGATION --- */
@@ -100,37 +135,43 @@ header {
     display: inline-block;
     padding: 10px 25px;
     background: var(--mc-stone);
-    color: var(--pink-deep);
+    color: var(--pink-pastel);
     text-transform: uppercase;
     font-size: 1.4rem;
-    font-weight: bold;
     
-    /* Light Mode 3D Border Trick */
+    /* 3D Border Trick */
     box-shadow: 
-        inset 3px 3px 0 #ffffff,
-        inset -3px -3px 0 rgba(0,0,0,0.1),
-        3px 3px 0 #bbb; /* Grey shadow */
-    border: 2px solid #888;
+        inset 3px 3px 0 rgba(255,255,255,0.2),
+        inset -3px -3px 0 rgba(0,0,0,0.2),
+        3px 3px 0 var(--btn-border);
+    border: 2px solid var(--btn-border);
     
     transition: all 0.1s;
 }
 
+/* Dark Mode Text Override for Buttons to ensure contrast */
+@media (prefers-color-scheme: dark) {
+    .mc-btn { color: var(--pink-pastel); }
+}
+@media (prefers-color-scheme: light) {
+    .mc-btn { color: var(--pink-deep); font-weight: bold; }
+}
+
 .mc-btn:hover {
-    background: var(--pink-pastel);
+    background: var(--pink-deep);
     color: #fff;
     transform: translateY(-2px);
-    border-color: var(--pink-deep);
     box-shadow: 
-        inset 3px 3px 0 rgba(255,255,255,0.4),
-        inset -3px -3px 0 rgba(0,0,0,0.1),
-        3px 5px 0 #bbb,
+        inset 3px 3px 0 rgba(255,255,255,0.2),
+        inset -3px -3px 0 rgba(0,0,0,0.2),
+        3px 5px 0 var(--btn-border),
         0 0 15px var(--pink-neon);
-    cursor: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" style="fill:hotpink;stroke:white"><polygon points="0,0 20,10 0,20"/></svg>'), pointer;
+    cursor: pointer;
 }
 
 .mc-btn:active {
     transform: translateY(2px);
-    box-shadow: 0 0 0 #bbb;
+    box-shadow: 0 0 0 var(--btn-border);
 }
 
 .menu-toggle {
@@ -153,22 +194,22 @@ main {
     text-align: center;
     margin-bottom: 60px;
     padding: 40px;
-    background: rgba(255,255,255,0.8); /* Semi-transparent white */
-    border: 4px dashed var(--pink-pastel);
+    background: color-mix(in srgb, var(--mc-bg-dark) 60%, transparent);
+    border: 4px dashed var(--pink-deep);
 }
 
 .hero-mini {
     text-align: left; 
     margin-bottom: 40px; 
     padding: 20px;
-    border-bottom: 4px dashed var(--pink-pastel);
+    border-bottom: 4px dashed var(--pink-deep);
 }
 
 h1 { 
     font-size: 3rem; 
     margin: 0; 
-    color: var(--pink-neon); 
-    text-shadow: 3px 3px 0 #fff0f5; /* Light shadow */
+    color: var(--pink-pastel); 
+    text-shadow: 4px 4px 0 var(--mc-shadow); 
 }
 
 p.subtitle { 
@@ -185,37 +226,36 @@ p.subtitle {
 }
 
 .blog-card {
-    background: #ffffff;
-    border: 2px solid var(--pink-pastel);
+    background: color-mix(in srgb, var(--mc-stone) 95%, black);
     padding: 20px;
     position: relative;
     transition: transform 0.2s;
     display: flex;
     flex-direction: column;
-    box-shadow: 5px 5px 0 #eee;
+    border: 2px solid var(--btn-border);
 }
 
 .blog-card:hover {
     transform: scale(1.02);
     z-index: 10;
     border-color: var(--pink-neon);
-    box-shadow: 5px 5px 0 var(--pink-pastel);
+    box-shadow: 4px 4px 0 var(--pink-pastel);
 }
 
 .card-header {
-    background: #fff0f5; /* Light pink background for icons */
+    background: var(--mc-bg-dark);
     height: 150px;
     display: flex;
     align-items: center;
     justify-content: center;
     margin-bottom: 15px;
-    border: 2px solid var(--pink-pastel);
+    border: 2px solid var(--btn-border);
     font-size: 4rem; 
     overflow: hidden;
 }
 
 .card-title {
-    color: var(--pink-deep);
+    color: var(--pink-neon);
     font-size: 1.8rem;
     margin: 0 0 10px 0;
     line-height: 1.1;
@@ -223,9 +263,9 @@ p.subtitle {
 
 .card-meta {
     font-size: 1rem;
-    color: #888;
+    color: var(--text-muted);
     margin-bottom: 15px;
-    border-bottom: 2px solid var(--pink-pastel);
+    border-bottom: 2px solid var(--pink-deep);
     padding-bottom: 5px;
     display: inline-block;
     width: 100%;
@@ -233,7 +273,7 @@ p.subtitle {
 
 .card-excerpt {
     font-size: 1.1rem;
-    color: #444; /* Darker text for readability */
+    color: var(--text-main);
     margin-bottom: 20px;
     flex-grow: 1;
 }
@@ -244,8 +284,8 @@ p.subtitle {
     height: 160px;         
     border-radius: 50%;   
     object-fit: cover;    
-    border: 3px solid var(--pink-neon); 
-    box-shadow: 3px 3px 0 #ddd;           
+    border: 3px solid var(--pink-pastel); 
+    box-shadow: 2px 2px 0 var(--mc-shadow);           
     display: block;
     margin: 0 auto 15px auto;             
 }
@@ -265,10 +305,6 @@ p.subtitle {
     padding: 8px 15px;
     font-size: 1.1rem;
     text-decoration: none;
-    /* Reset specific colors for light mode readability if needed, 
-       or keep brand colors. Here we allow the inline styles to persist
-       but add a shadow override */
-    box-shadow: 3px 3px 0 #ccc !important;
 }
 
 .social-links .mc-btn:hover i {
@@ -287,11 +323,11 @@ p.subtitle {
 /* --- FOOTER --- */
 footer {
     margin-top: 80px;
-    background: #fff;
+    background: var(--mc-shadow); /* Slightly darker than bg */
     padding: 40px 20px;
     text-align: center;
     border-top: 4px solid var(--pink-neon);
-    color: var(--text-main);
+    color: var(--pink-pastel);
 }
 
 /* --- ANIMATIONS --- */
@@ -320,9 +356,9 @@ footer {
 
     .nav-links.active {
         display: flex; 
-        background: #fff; /* Ensure mobile menu is readable */
-        border: 2px solid var(--pink-pastel);
-        padding: 10px;
+        background: var(--mc-bg-dark);
+        border: 2px solid var(--pink-deep);
+        padding: 15px;
     }
 
     .mc-btn {
