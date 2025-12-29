@@ -4,6 +4,15 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Michelle's Playground</title>
+    
+    <meta property="og:type" content="website">
+    <meta property="og:title" content="SENNHEISER HD800S IS THE ONLY GOOD HEADPHONES IN EXISTENCE">
+    <meta property="og:description" content="Fuck you peaky treble at 6kHz but you're such a DAMN IRREPLACEABLE FUCK">
+    <meta property="og:image" content="https://YOUR-WEBSITE-URL.com/hd800s.png">
+    
+    <meta name="theme-color" content="#ff6ec7">
+    
+    <meta name="twitter:card" content="summary_large_image">
     <link rel="icon" type="image/png" href="favicon.png">
     <link href="https://fonts.googleapis.com/css2?family=VT323&display=swap" rel="stylesheet">
     <style>
@@ -253,34 +262,14 @@
             }
         }
         .profile-img {
-            width: 80px;          /* Adjust size here */
-            height: 80px;         /* Must match width for a perfect circle */
-            border-radius: 50%;   /* This creates the circle */
-            object-fit: cover;    /* Prevents the image from stretching */
-            border: 3px solid var(--pink-pastel); /* Optional: matches your theme */
-            box-shadow: 2px 2px 0 #000;           /* Optional: matches your 3D style */
+            width: 80px;
+            height: 80px;
+            border-radius: 50%;
+            object-fit: cover;
+            border: 3px solid var(--pink-pastel);
+            box-shadow: 2px 2px 0 #000;
             display: block;
-            margin: 0 auto 15px auto;             /* Centers the image and adds bottom spacing */
-        }
-        .social-links {
-            display: flex;
-            justify-content: center; /* Centers the row of buttons */
-            gap: 15px;
-            margin: 20px 0;
-            flex-wrap: wrap; /* Allows them to stack on very small screens */
-        }
-        .social-links .mc-btn {
-            display: inline-flex;
-            align-items: center;
-            gap: 8px; /* Space between icon and text */
-            padding: 8px 15px;
-            font-size: 1.1rem;
-            text-decoration: none;
-        }
-        /* Optional: Slight wiggle on hover for icons */
-        .social-links .mc-btn:hover i {
-            transform: scale(1.2);
-            transition: transform 0.2s;
+            margin: 0 auto 15px auto;
         }
     </style>
 </head>
@@ -324,7 +313,6 @@
     </footer>
 
     <script>
-        // Simple script to toggle the mobile menu
         function toggleMenu() {
             const nav = document.getElementById('navLinks');
             nav.classList.toggle('active');
