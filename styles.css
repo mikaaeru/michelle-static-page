@@ -61,19 +61,56 @@
 body {
     margin: 0;
     padding: 0;
-    background-color: var(--mc-bg-dark);
+    /* Transparent so the pseudo-elements show through */
+    background-color: transparent;
     color: var(--text-main);
     font-family: 'VT323', monospace;
     font-size: 1.3rem;
     
-    /* Dynamic Background Pattern */
-    background-image: 
-        linear-gradient(45deg, var(--bg-pattern) 25%, transparent 25%, transparent 75%, var(--bg-pattern) 75%, var(--bg-pattern)),
-        linear-gradient(45deg, var(--bg-pattern) 25%, transparent 25%, transparent 75%, var(--bg-pattern) 75%, var(--bg-pattern));
-    background-size: 60px 60px;
-    background-position: 0 0, 30px 30px;
+    /* Structure for background layers */
+    position: relative;
+    min-height: 100vh;
     overflow-x: hidden;
-    transition: background-color 0.3s, color 0.3s;
+    transition: color 0.3s;
+}
+
+/* --- BACKGROUND IMAGE LAYER (Blurred) --- */
+body::before {
+    content: "";
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    z-index: -2; /* Furthest back */
+    
+    background-image: url('background.png');
+    background-size: cover;
+    background-position: center;
+    background-repeat: no-repeat;
+    
+    /* Blur Effect */
+    filter: blur(10px);
+    /* Scale slightly to hide blurred edges */
+    transform: scale(1.05);
+}
+
+/* --- BACKGROUND TINT LAYER (Readability) --- */
+body::after {
+    content: "";
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    z-index: -1; /* Behind content, in front of image */
+    
+    /* Adapts to Light/Dark mode variable */
+    background-color: var(--mc-bg-dark);
+    
+    /* Adjust opacity to see more/less of the image (0.8 = 80% solid color) */
+    opacity: 0.8; 
+    transition: background-color 0.3s;
 }
 
 a { text-decoration: none; color: inherit; }
