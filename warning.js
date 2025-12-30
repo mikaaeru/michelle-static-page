@@ -2,6 +2,8 @@
     /* =========================================
        1. CONFIGURATION
     ========================================= */
+    const STORAGE_KEY = 'system_warning_consent'; // Key for remembering choice
+
     const phrases = [
         // English
         "STOP", "DON'T TOUCH", "NO!", "YAMETEEEEEE!", 
@@ -29,7 +31,6 @@
         'intro1.wav', 'intro2.wav', 'intro3.wav', 'intro4.wav'
     ];
 
-    // 5.0 = 500% Volume.
     const VOLUME_GAIN = 5.0; 
 
     /* =========================================
@@ -38,83 +39,46 @@
     let audioContext = null;
     let audioBuffers = [];
     let isPlaying = false; 
-    let isAccepted = false; 
+    let isAccepted = false; // logic gate
+    let areAssetsLoaded = false; // prevents errors if user types before fetch finishes
     let lastAudioIndex = -1;
+
+    // Check if user previously accepted
+    const hasPriorConsent = localStorage.getItem(STORAGE_KEY) === 'true';
 
     /* =========================================
        3. UI & CSS INJECTION
     ========================================= */
     const style = document.createElement('style');
     style.innerHTML = `
-        /* --- 1. The Full Screen Blur Overlay (Consent) --- */
+        /* Overlay styles */
         #consent-overlay {
-            position: fixed;
-            top: 0; left: 0; width: 100vw; height: 100vh;
-            backdrop-filter: blur(8px); 
-            -webkit-backdrop-filter: blur(8px);
+            position: fixed; top: 0; left: 0; width: 100vw; height: 100vh;
+            backdrop-filter: blur(8px); -webkit-backdrop-filter: blur(8px);
             background-color: rgba(0, 0, 0, 0.4); 
             z-index: 2147483646;
-            display: flex;
-            align-items: flex-end; 
-            justify-content: center;
-            padding-bottom: 50px;
-            opacity: 1;
-            transition: opacity 0.3s ease-out;
+            display: flex; align-items: flex-end; justify-content: center;
+            padding-bottom: 50px; opacity: 1; transition: opacity 0.3s ease-out;
         }
-
-        /* --- 2. The Minecraft "Cookie Banner" --- */
         #consent-box {
-            background-color: var(--mc-stone, #3a3a3a);
-            color: var(--text-main, #fff);
-            width: 90%;
-            max-width: 900px;
-            padding: 20px;
-            border: 4px solid var(--btn-border, #000);
-            box-shadow: 
-                inset 4px 4px 0 rgba(255,255,255,0.1),
-                inset -4px -4px 0 rgba(0,0,0,0.2),
-                0 10px 25px rgba(0,0,0,0.5);   
-            display: flex;
-            flex-direction: row;
-            align-items: center;
-            justify-content: space-between;
-            gap: 20px;
-            font-family: 'VT323', monospace;
+            background-color: #3a3a3a; color: #fff;
+            width: 90%; max-width: 900px; padding: 20px;
+            border: 4px solid #000;
+            box-shadow: inset 4px 4px 0 rgba(255,255,255,0.1), inset -4px -4px 0 rgba(0,0,0,0.2), 0 10px 25px rgba(0,0,0,0.5);   
+            display: flex; align-items: center; justify-content: space-between;
+            gap: 20px; font-family: 'VT323', monospace;
         }
-
-        .consent-text h3 {
-            margin: 0;
-            color: var(--pink-neon, #ff6ec7);
-            font-size: 1.8rem;
-            text-transform: uppercase;
-            text-shadow: 2px 2px 0 #000;
-        }
-
-        .consent-text p {
-            margin: 5px 0 0 0;
-            font-size: 1.2rem;
-            color: var(--text-muted, #ccc);
-        }
-
-        #loading-status {
-            color: var(--pink-pastel, #ff92df);
-            font-weight: bold;
-        }
-
-        /* --- 3. The Warning Flash --- */
+        .consent-text h3 { margin: 0; color: #ff6ec7; font-size: 1.8rem; text-transform: uppercase; text-shadow: 2px 2px 0 #000; }
+        .consent-text p { margin: 5px 0 0 0; font-size: 1.2rem; color: #ccc; }
+        #loading-status { color: #ff92df; font-weight: bold; }
+        
+        /* Warning Flash */
         #warning-flash {
             position: fixed; top: 0; left: 0; width: 100vw; height: 100vh;
-            
-            /* Translucent dark background + Heavy Blur */
             background-color: rgba(242, 0, 255, 1); 
-            backdrop-filter: blur(15px);
-            -webkit-backdrop-filter: blur(15px);
-            
-            color: #ffffff;
-            display: flex; justify-content: center; align-items: center;
-            z-index: 2147483647; 
-            pointer-events: none; opacity: 0;
-            /* Very fast fade out to make it snappy */
+            backdrop-filter: blur(15px); -webkit-backdrop-filter: blur(15px);
+            color: #ffffff; display: flex; justify-content: center; align-items: center;
+            z-index: 2147483647; pointer-events: none; opacity: 0;
             transition: opacity 0.05s ease-out; 
         }
         #warning-text {
@@ -123,7 +87,6 @@
             text-shadow: 0 0 20px rgba(255, 0, 0, 0.8), 4px 4px 0px #000;
             animation: shake 0.1s infinite;
         }
-
         @media (max-width: 600px) {
             #consent-box { flex-direction: column; text-align: center; }
             #consent-box button { width: 100%; }
@@ -135,7 +98,6 @@
     `;
     document.head.appendChild(style);
 
-    // Create Warning Flash Layer
     const flashOverlay = document.createElement('div');
     flashOverlay.id = 'warning-flash';
     const textSpan = document.createElement('span');
@@ -143,10 +105,15 @@
     flashOverlay.appendChild(textSpan);
     document.body.appendChild(flashOverlay);
 
-    // Create Consent Banner
     const consentOverlay = document.createElement('div');
     consentOverlay.id = 'consent-overlay';
     
+    // IF already consented, hide overlay immediately via inline style
+    if (hasPriorConsent) {
+        consentOverlay.style.display = 'none';
+        isAccepted = true; 
+    }
+
     consentOverlay.innerHTML = `
         <div id="consent-box">
             <div class="consent-text">
@@ -154,9 +121,7 @@
                 <p>This site is using media playback feature to enhance reader experience, it is required to view the site.</p>
                 <p id="loading-status">Loading Assets...</p>
             </div>
-            <button id="accept-btn" class="mc-btn" disabled>
-                INITIALIZE
-            </button>
+            <button id="accept-btn" class="mc-btn" disabled>INITIALIZE</button>
         </div>
     `;
     document.body.appendChild(consentOverlay);
@@ -179,7 +144,11 @@
             const decodePromises = arrayBuffers.map(buf => audioContext.decodeAudioData(buf));
             
             audioBuffers = await Promise.all(decodePromises);
+            
+            // Mark assets as ready
+            areAssetsLoaded = true;
 
+            // Update UI for new users
             loadText.innerText = "Assets Loaded. Click Initialize to enter.";
             loadBtn.innerText = "I ACCEPT";
             loadBtn.disabled = false;
@@ -187,6 +156,9 @@
             loadBtn.addEventListener('click', () => {
                 if (audioContext.state === 'suspended') audioContext.resume();
                 
+                // Save to storage
+                localStorage.setItem(STORAGE_KEY, 'true');
+
                 consentOverlay.style.opacity = '0';
                 setTimeout(() => {
                     consentOverlay.style.display = 'none';
@@ -205,39 +177,35 @@
 
         const source = audioContext.createBufferSource();
         source.buffer = buffer;
-
         const gainNode = audioContext.createGain();
         gainNode.gain.value = VOLUME_GAIN; 
-
         source.connect(gainNode);
         gainNode.connect(audioContext.destination);
-
         source.start(0);
 
-        source.onended = () => {
-            // Only reset the logic lock, visuals are handled in triggerWarning now
-            isPlaying = false; 
-        };
+        source.onended = () => { isPlaying = false; };
     }
 
     /* =========================================
        5. TRIGGER LOGIC
     ========================================= */
-    function triggerWarning(event) {
-        if (!isAccepted || isPlaying) return; 
+    async function triggerWarning(event) {
+        // Must be accepted AND files must be loaded
+        if (!isAccepted || !areAssetsLoaded || isPlaying) return; 
+
+        // Auto-resume context if it was suspended (common on reloads)
+        if (audioContext && audioContext.state === 'suspended') {
+            await audioContext.resume();
+        }
         
         isPlaying = true; 
 
-        // 1. Visuals (Immediate Flash)
+        // 1. Visuals
         textSpan.innerText = phrases[Math.floor(Math.random() * phrases.length)];
         flashOverlay.style.opacity = '1';
+        setTimeout(() => { flashOverlay.style.opacity = '0'; }, 100);
 
-        // HIDE VISUALS AFTER 100ms
-        setTimeout(() => {
-            flashOverlay.style.opacity = '0';
-        }, 100);
-
-        // 2. Audio Logic
+        // 2. Audio
         let newIndex;
         do {
             newIndex = Math.floor(Math.random() * audioBuffers.length);
