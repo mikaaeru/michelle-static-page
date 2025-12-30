@@ -8,8 +8,8 @@
     const phrases = [
         // English
         "STOP", "DON'T TOUCH", "NO!", "YAMETEEEEEE!", 
-        "DAME!", "BAKA!", "ERROR", "FATAL", "FORBIDDEN", 
-        "SYSTEM HALT", "KYAAAAA!", "HANDS OFF",
+        "DAME!", "BAKA!", "ERROR", "FATAL", "FORBIDDEN",
+        "ASU", "KYAAAAA!", "ANJING", "BUTO", "BABI", "PUKIMAK", "ANJING",
         
         // Japanese
         "やめて!",      // Stop!
