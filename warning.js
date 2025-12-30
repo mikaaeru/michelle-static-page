@@ -3,9 +3,26 @@
        1. CONFIGURATION
     ========================================= */
     const phrases = [
-        "STOP", "DON'T TOUCH", "NO!", "YAMETEEEEEE!", "やめて!", 
+        // English
+        "STOP", "DON'T TOUCH", "NO!", "YAMETEEEEEE!", 
         "DAME!", "BAKA!", "ERROR", "FATAL", "FORBIDDEN", 
-        "DON'T CLICK", "SYSTEM HALT", "KYAAAAA!", "HANDS OFF"
+        "SYSTEM HALT", "KYAAAAA!", "HANDS OFF",
+        
+        // Japanese
+        "やめて!",      // Stop!
+        "触らないで!",  // Don't touch!
+        "ダメ!",       // No/Bad!
+        "うるさい!",    // Shut up/Noisy!
+        "警告",        // Warning
+        "エラー",      // Error
+        
+        // Chinese
+        "不要!",       // Don't!
+        "禁止",        // Forbidden
+        "错误",        // Error
+        "停下",        // Stop
+        "住手",        // Stop your hand
+        "别碰"         // Don't touch
     ];
 
     const audioSources = [
@@ -29,17 +46,16 @@
     ========================================= */
     const style = document.createElement('style');
     style.innerHTML = `
-        /* --- 1. The Full Screen Blur Overlay --- */
+        /* --- 1. The Full Screen Blur Overlay (Consent) --- */
         #consent-overlay {
             position: fixed;
             top: 0; left: 0; width: 100vw; height: 100vh;
-            /* This creates the blur effect over your website */
             backdrop-filter: blur(8px); 
             -webkit-backdrop-filter: blur(8px);
-            background-color: rgba(0, 0, 0, 0.4); /* Slight dim */
+            background-color: rgba(0, 0, 0, 0.4); 
             z-index: 2147483646;
             display: flex;
-            align-items: flex-end; /* Push content to bottom */
+            align-items: flex-end; 
             justify-content: center;
             padding-bottom: 50px;
             opacity: 1;
@@ -53,14 +69,11 @@
             width: 90%;
             max-width: 900px;
             padding: 20px;
-            
-            /* Minecraft 3D Border Effect (Matching styles.css .mc-btn logic) */
             border: 4px solid var(--btn-border, #000);
             box-shadow: 
                 inset 4px 4px 0 rgba(255,255,255,0.1),
                 inset -4px -4px 0 rgba(0,0,0,0.2),
-                0 10px 25px rgba(0,0,0,0.5);
-                
+                0 10px 25px rgba(0,0,0,0.5);   
             display: flex;
             flex-direction: row;
             align-items: center;
@@ -83,25 +96,31 @@
             color: var(--text-muted, #ccc);
         }
 
-        /* Loading State */
         #loading-status {
             color: var(--pink-pastel, #ff92df);
             font-weight: bold;
         }
 
-        /* --- 3. The Red Flash Warning (Hidden initially) --- */
+        /* --- 3. The Warning Flash --- */
         #warning-flash {
             position: fixed; top: 0; left: 0; width: 100vw; height: 100vh;
-            background-color: #ff0000; color: #ffffff;
+            
+            /* Translucent dark background + Heavy Blur */
+            background-color: rgba(0, 0, 0, 0.6); 
+            backdrop-filter: blur(15px);
+            -webkit-backdrop-filter: blur(15px);
+            
+            color: #ffffff;
             display: flex; justify-content: center; align-items: center;
-            z-index: 2147483647; /* Highest priority */
+            z-index: 2147483647; 
             pointer-events: none; opacity: 0;
-            transition: opacity 0.1s ease-out;
+            /* Very fast fade out to make it snappy */
+            transition: opacity 0.05s ease-out; 
         }
         #warning-text {
             font-family: 'VT323', monospace; font-size: 6rem;
             font-weight: 900; text-transform: uppercase;
-            text-shadow: 5px 5px 0px #000;
+            text-shadow: 0 0 20px rgba(255, 0, 0, 0.8), 4px 4px 0px #000;
             animation: shake 0.1s infinite;
         }
 
@@ -128,12 +147,11 @@
     const consentOverlay = document.createElement('div');
     consentOverlay.id = 'consent-overlay';
     
-    // We reuse classes from styles.css (.mc-btn)
     consentOverlay.innerHTML = `
         <div id="consent-box">
             <div class="consent-text">
-                <h3>⚠️ Consent notices: media playback</h3>
-                <p>To enhance reading experience, this site uses media playback</p>
+                <h3>⚠️ System Warning: Loud Audio</h3>
+                <p>This site features random, high-volume audio triggers.</p>
                 <p id="loading-status">Loading Assets...</p>
             </div>
             <button id="accept-btn" class="mc-btn" disabled>
@@ -154,7 +172,6 @@
         const loadText = document.getElementById('loading-status');
 
         try {
-            // Parallel Fetching
             const fetchPromises = audioSources.map(src => fetch(src));
             const responses = await Promise.all(fetchPromises);
             const bufferPromises = responses.map(res => res.arrayBuffer());
@@ -163,16 +180,13 @@
             
             audioBuffers = await Promise.all(decodePromises);
 
-            // Unlock UI
             loadText.innerText = "Assets Loaded. Click Initialize to enter.";
             loadBtn.innerText = "I ACCEPT";
             loadBtn.disabled = false;
             
-            // Accept Click Handler
             loadBtn.addEventListener('click', () => {
                 if (audioContext.state === 'suspended') audioContext.resume();
                 
-                // Fade out the blur overlay
                 consentOverlay.style.opacity = '0';
                 setTimeout(() => {
                     consentOverlay.style.display = 'none';
@@ -201,8 +215,8 @@
         source.start(0);
 
         source.onended = () => {
+            // Only reset the logic lock, visuals are handled in triggerWarning now
             isPlaying = false; 
-            flashOverlay.style.opacity = '0'; 
         };
     }
 
@@ -214,11 +228,14 @@
         
         isPlaying = true; 
 
-        // 1. Visuals
+        // 1. Visuals (Immediate Flash)
         textSpan.innerText = phrases[Math.floor(Math.random() * phrases.length)];
-        const bgColors = ['#ff0000', '#000000', '#ff00ff', '#0000ff'];
-        flashOverlay.style.backgroundColor = bgColors[Math.floor(Math.random() * bgColors.length)];
         flashOverlay.style.opacity = '1';
+
+        // HIDE VISUALS AFTER 100ms
+        setTimeout(() => {
+            flashOverlay.style.opacity = '0';
+        }, 100);
 
         // 2. Audio Logic
         let newIndex;
@@ -249,12 +266,5 @@
             triggerWarning(e);
         }
     });
-
-    window.addEventListener('click', (e) => {
-        if(isAccepted && e.target.closest('a')) {
-             e.preventDefault(); 
-             triggerWarning(e);
-        }
-    }, true);
 
 })();
