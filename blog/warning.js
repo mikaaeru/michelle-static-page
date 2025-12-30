@@ -32,8 +32,6 @@
         'intro1.wav', 'intro2.wav', 'intro3.wav', 'intro4.wav'
     ];
 
-    // WARNING: 5.0 is 500% amplitude. Combined with the layering below, 
-    // this will cause significant digital clipping and distortion.
     const VOLUME_GAIN = 5.0; 
 
     /* =========================================
@@ -172,43 +170,32 @@
         }
     }
 
-    /**
-     * UPDATED playSound
-     * Accepts rate (speed/pitch) and drive (volume multiplier)
-     */
-    function playSound(buffer, rate = 1.0, drive = 1.0) {
+    function playSound(buffer) {
         if (!audioContext) return;
         const source = audioContext.createBufferSource();
         source.buffer = buffer;
-        
-        // Pitch shift: <1.0 = deep/slow, >1.0 = high/chipmunk
-        source.playbackRate.value = rate;
-
         const gainNode = audioContext.createGain();
-        // Multiply global gain by layer drive for massive volume
-        gainNode.gain.value = VOLUME_GAIN * drive; 
-
+        gainNode.gain.value = VOLUME_GAIN; 
         source.connect(gainNode);
         gainNode.connect(audioContext.destination);
         source.start(0);
-        
-        // We do not set 'onended' here because we are firing multiple 
-        // overlapping sounds. We handle "isPlaying" state in triggerWarning.
+        source.onended = () => { isPlaying = false; };
     }
 
     /* =========================================
-       5. TRIGGER LOGIC (DEMONIC CHORUS)
+       5. TRIGGER LOGIC
     ========================================= */
     async function triggerWarning(e) {
         // Gates: Must be accepted, assets loaded, and not currently screaming
         if (!isAccepted || !areAssetsLoaded || isPlaying) return; 
 
-        // Gate: Ignore clicks on the Consent Overlay
+        // Gate: Ignore clicks on the Consent Overlay itself (prevents locking user out)
         if (e && e.target && e.target.closest('#consent-overlay')) return;
 
-        // Gate: Ignore clicks on Links
+        // Gate: Ignore clicks on Links (<a> tags)
         if (e && e.target && e.target.closest('a')) return;
 
+        // Auto-resume audio context
         if (audioContext && audioContext.state === 'suspended') {
             await audioContext.resume();
         }
@@ -220,41 +207,18 @@
         flashOverlay.style.opacity = '1';
         setTimeout(() => { flashOverlay.style.opacity = '0'; }, 100);
 
-        // 2. Audio: MULTI-LAYER PITCH SHIFT
-        // We pick one sound, then play 3 mutated versions of it
-        let index;
+        // 2. Audio
+        let newIndex;
         do {
-            index = Math.floor(Math.random() * audioBuffers.length);
-        } while (index === lastAudioIndex && audioBuffers.length > 1);
-        lastAudioIndex = index;
-        
-        const buffer = audioBuffers[index];
+            newIndex = Math.floor(Math.random() * audioBuffers.length);
+        } while (newIndex === lastAudioIndex && audioBuffers.length > 1);
+        lastAudioIndex = newIndex;
 
-        if (buffer) {
-            // Layer 1: Low/Growl (0.6x - 0.8x Pitch)
-            // This adds "body" and bass to the sound
-            playSound(buffer, 0.6 + (Math.random() * 0.2), 1.0);
-
-            // Layer 2: High/Scream (1.2x - 1.5x Pitch)
-            // We delay it slightly (10ms) so the impact transients don't line up perfectly
-            setTimeout(() => {
-                playSound(buffer, 1.2 + (Math.random() * 0.3), 0.8);
-            }, 10);
-
-            // Layer 3: Detuned Normal (0.9x - 1.1x Pitch)
-            // Adds chaos to the middle frequencies
-            setTimeout(() => {
-                playSound(buffer, 0.9 + (Math.random() * 0.2), 1.0);
-            }, 20);
+        if (audioBuffers[newIndex]) {
+            playSound(audioBuffers[newIndex]);
+        } else {
+            isPlaying = false;
         }
-
-        // Lock duration based on the slowest layer (0.6x speed = longest duration)
-        // If speed is 0.5, duration is 2x. If speed is 0.6, duration is 1.66x.
-        const duration = buffer ? (buffer.duration / 0.6) * 1000 : 500;
-        
-        setTimeout(() => { 
-            isPlaying = false; 
-        }, duration); 
     }
 
     /* =========================================
@@ -267,20 +231,20 @@
         if(isAccepted) triggerWarning(e);
     });
 
-    // 2. Desktop Click
+    // 2. Desktop Click (MouseDown is faster than Click)
     window.addEventListener('mousedown', (e) => {
         if(isAccepted) triggerWarning(e);
     });
 
-    // 3. Mobile Touch (Start)
+    // 3. Mobile Touch (Start - Record position)
     window.addEventListener('touchstart', (e) => {
         if(isAccepted && e.touches.length > 0) {
             touchStartX = e.touches[0].screenX;
             touchStartY = e.touches[0].screenY;
         }
-    }, { passive: true }); 
+    }, { passive: true }); // passive improves scroll performance
 
-    // 4. Mobile Touch (End)
+    // 4. Mobile Touch (End - Calculate distance)
     window.addEventListener('touchend', (e) => {
         if(isAccepted && e.changedTouches.length > 0) {
             const touchEndX = e.changedTouches[0].screenX;
