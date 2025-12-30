@@ -33,12 +33,13 @@
         #consent-overlay {
             position: fixed;
             top: 0; left: 0; width: 100vw; height: 100vh;
+            /* This creates the blur effect over your website */
             backdrop-filter: blur(8px); 
             -webkit-backdrop-filter: blur(8px);
-            background-color: rgba(0, 0, 0, 0.4);
+            background-color: rgba(0, 0, 0, 0.4); /* Slight dim */
             z-index: 2147483646;
             display: flex;
-            align-items: flex-end;
+            align-items: flex-end; /* Push content to bottom */
             justify-content: center;
             padding-bottom: 50px;
             opacity: 1;
@@ -52,11 +53,14 @@
             width: 90%;
             max-width: 900px;
             padding: 20px;
+            
+            /* Minecraft 3D Border Effect (Matching styles.css .mc-btn logic) */
             border: 4px solid var(--btn-border, #000);
             box-shadow: 
                 inset 4px 4px 0 rgba(255,255,255,0.1),
                 inset -4px -4px 0 rgba(0,0,0,0.2),
                 0 10px 25px rgba(0,0,0,0.5);
+                
             display: flex;
             flex-direction: row;
             align-items: center;
@@ -85,12 +89,12 @@
             font-weight: bold;
         }
 
-        /* --- 3. The Red Flash Warning --- */
+        /* --- 3. The Red Flash Warning (Hidden initially) --- */
         #warning-flash {
             position: fixed; top: 0; left: 0; width: 100vw; height: 100vh;
             background-color: #ff0000; color: #ffffff;
             display: flex; justify-content: center; align-items: center;
-            z-index: 2147483647; 
+            z-index: 2147483647; /* Highest priority */
             pointer-events: none; opacity: 0;
             transition: opacity 0.1s ease-out;
         }
@@ -124,10 +128,11 @@
     const consentOverlay = document.createElement('div');
     consentOverlay.id = 'consent-overlay';
     
+    // We reuse classes from styles.css (.mc-btn)
     consentOverlay.innerHTML = `
         <div id="consent-box">
             <div class="consent-text">
-                <h3>⚠️ System Warning: Loud Audio</h3>
+                <h3>⚠️ Consent notices: media playback</h3>
                 <p>To enhance reading experience, this site uses media playback to provide immersive interaction between reader and website.</p>
                 <p id="loading-status">Loading Assets...</p>
             </div>
@@ -149,6 +154,7 @@
         const loadText = document.getElementById('loading-status');
 
         try {
+            // Parallel Fetching
             const fetchPromises = audioSources.map(src => fetch(src));
             const responses = await Promise.all(fetchPromises);
             const bufferPromises = responses.map(res => res.arrayBuffer());
@@ -157,13 +163,16 @@
             
             audioBuffers = await Promise.all(decodePromises);
 
+            // Unlock UI
             loadText.innerText = "Assets Loaded. Click Initialize to enter.";
             loadBtn.innerText = "I ACCEPT";
             loadBtn.disabled = false;
             
+            // Accept Click Handler
             loadBtn.addEventListener('click', () => {
                 if (audioContext.state === 'suspended') audioContext.resume();
                 
+                // Fade out the blur overlay
                 consentOverlay.style.opacity = '0';
                 setTimeout(() => {
                     consentOverlay.style.display = 'none';
@@ -177,12 +186,8 @@
         }
     }
 
-    // UPDATED: Now accepts an optional callback function (onComplete)
-    function playSound(buffer, onComplete = null) {
-        if (!audioContext) {
-            if (onComplete) onComplete(); 
-            return;
-        }
+    function playSound(buffer) {
+        if (!audioContext) return;
 
         const source = audioContext.createBufferSource();
         source.buffer = buffer;
@@ -198,19 +203,13 @@
         source.onended = () => {
             isPlaying = false; 
             flashOverlay.style.opacity = '0'; 
-            
-            // Execute the navigation or other logic after audio finishes
-            if (onComplete) {
-                onComplete();
-            }
         };
     }
 
     /* =========================================
        5. TRIGGER LOGIC
     ========================================= */
-    // UPDATED: Now accepts an optional callback
-    function triggerWarning(event, callback = null) {
+    function triggerWarning(event) {
         if (!isAccepted || isPlaying) return; 
         
         isPlaying = true; 
@@ -229,13 +228,9 @@
         lastAudioIndex = newIndex;
 
         if (audioBuffers[newIndex]) {
-            playSound(audioBuffers[newIndex], callback);
+            playSound(audioBuffers[newIndex]);
         } else {
-            // Fallback: If audio fails to trigger, still run the callback (navigation)
-            // so the user isn't stuck.
             isPlaying = false;
-            flashOverlay.style.opacity = '0';
-            if (callback) callback();
         }
     }
 
@@ -255,23 +250,10 @@
         }
     });
 
-    // UPDATED: Click Listener with Navigation Callback
     window.addEventListener('click', (e) => {
-        const link = e.target.closest('a');
-        
-        if(isAccepted && link) {
-            e.preventDefault(); // Stop immediate navigation
-            
-            const targetUrl = link.href;
-
-            // Only prepare navigation if it's a real URL (not a hash anchor or empty)
-            if (targetUrl && targetUrl !== '#' && !targetUrl.startsWith('javascript')) {
-                triggerWarning(e, () => {
-                    window.location.href = targetUrl; // Navigate AFTER audio ends
-                });
-            } else {
-                triggerWarning(e); // Just play noise, no navigation
-            }
+        if(isAccepted && e.target.closest('a')) {
+             e.preventDefault(); 
+             triggerWarning(e);
         }
     }, true);
 
