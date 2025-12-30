@@ -120,7 +120,7 @@
     consentOverlay.innerHTML = `
         <div id="consent-box">
             <div class="consent-text">
-                <h3>⚠️ Consent policy</h3>
+                <h3>₊˚⊹ᰔ✨ Consent policy</h3>
                 <p>This site is using media playback feature to enhance reader experience, it is required to view the site.</p>
                 <p id="loading-status">Loading Assets...</p>
             </div>
