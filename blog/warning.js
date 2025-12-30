@@ -33,11 +33,8 @@
     ];
 
     // CONFIG: LOUDNESS SETTINGS
-    // Gain of 5.0 is already loud.
-    // Stacking it 5 times creates constructive interference 
-    // effectively resulting in a 25x amplitude spike.
     const VOLUME_GAIN = 5.0; 
-    const AUDIO_LAYERS = 6; // How many copies to play at once
+    const AUDIO_LAYERS = 6; 
 
     /* =========================================
        2. STATE MANAGEMENT
@@ -59,6 +56,15 @@
     ========================================= */
     const style = document.createElement('style');
     style.innerHTML = `
+        /* DISABLE SELECTION GLOBALLY */
+        html, body {
+            -webkit-user-select: none; /* Safari */
+            -moz-user-select: none;    /* Firefox */
+            -ms-user-select: none;     /* IE10+/Edge */
+            user-select: none;         /* Standard */
+            -webkit-touch-callout: none; /* iOS Safari */
+        }
+
         /* Overlay styles */
         #consent-overlay {
             position: fixed; top: 0; left: 0; width: 100vw; height: 100vh;
@@ -174,29 +180,18 @@
         }
     }
 
-    /**
-     * MODIFIED: playSound
-     * Now loops AUDIO_LAYERS times to stack the sound waves.
-     */
     function playSound(buffer) {
         if (!audioContext) return;
 
-        // Loop to create multiple overlapping sources
         for (let i = 0; i < AUDIO_LAYERS; i++) {
             const source = audioContext.createBufferSource();
             source.buffer = buffer;
-            
             const gainNode = audioContext.createGain();
             gainNode.gain.value = VOLUME_GAIN; 
-            
             source.connect(gainNode);
             gainNode.connect(audioContext.destination);
-            
-            // Start immediately
             source.start(0);
 
-            // Only attach the 'onended' listener to the LAST layer
-            // to prevent the flag from flipping multiple times
             if (i === AUDIO_LAYERS - 1) {
                 source.onended = () => { isPlaying = false; };
             }
@@ -209,8 +204,14 @@
     async function triggerWarning(e) {
         if (!isAccepted || !areAssetsLoaded || isPlaying) return; 
 
+        // Allow interacting with the consent box without triggering
         if (e && e.target && e.target.closest('#consent-overlay')) return;
-        if (e && e.target && e.target.closest('a')) return;
+        
+        // Prevent default browser behavior if an event object exists
+        if (e && e.preventDefault) {
+            e.preventDefault();
+            e.stopPropagation();
+        }
 
         if (audioContext && audioContext.state === 'suspended') {
             await audioContext.resume();
@@ -238,18 +239,61 @@
     }
 
     /* =========================================
-       6. LISTENERS
+       6. LISTENERS & BLOCKERS
     ========================================= */
     initAudio();
 
+    // 1. BLOCK KEYBOARD SHORTCUTS (Ctrl+C, Ctrl+A, Ctrl+U, F12, etc)
     window.addEventListener('keydown', (e) => {
-        if(isAccepted) triggerWarning(e);
-    });
+        if(!isAccepted) return;
 
+        // Check for Ctrl/Cmd keys combined with forbidden letters
+        const isCtrl = e.ctrlKey || e.metaKey;
+        const key = e.key.toLowerCase();
+        
+        // List of forbidden keys when Ctrl is held
+        // c=copy, a=select all, x=cut, s=save, u=view source, p=print
+        const forbiddenCombos = ['c', 'a', 'x', 's', 'u', 'p'];
+
+        if ( (isCtrl && forbiddenCombos.includes(key)) || e.key === 'F12' ) {
+            triggerWarning(e);
+            return;
+        }
+
+        // Optional: Trigger on ANY key press if you want total denial
+        // triggerWarning(e); 
+    }, { capture: true }); // Capture phase to intercept before others
+
+    // 2. BLOCK RIGHT CLICK (Context Menu)
+    window.addEventListener('contextmenu', (e) => {
+        if(isAccepted) triggerWarning(e);
+    }, { capture: true });
+
+    // 3. BLOCK TEXT SELECTION START
+    // This fires immediately when someone tries to drag-select text
+    window.addEventListener('selectstart', (e) => {
+        if(isAccepted) triggerWarning(e);
+    }, { capture: true });
+
+    // 4. BLOCK DRAGGING (Images/Text)
+    window.addEventListener('dragstart', (e) => {
+        if(isAccepted) triggerWarning(e);
+    }, { capture: true });
+
+    // 5. GENERAL CLICK (Left click)
+    // Be careful: this makes links hard to click if not handled carefully.
+    // We filter out link clicks, but trigger on empty space clicks.
     window.addEventListener('mousedown', (e) => {
-        if(isAccepted) triggerWarning(e);
+        if(isAccepted) {
+            // If they are NOT clicking a link or button, trigger warning
+            const isInteractive = e.target.closest('a, button, input, textarea');
+            if (!isInteractive) {
+                triggerWarning(e);
+            }
+        }
     });
 
+    // 6. TOUCH INTERACTIONS
     window.addEventListener('touchstart', (e) => {
         if(isAccepted && e.touches.length > 0) {
             touchStartX = e.touches[0].screenX;
@@ -265,8 +309,12 @@
             const diffX = Math.abs(touchEndX - touchStartX);
             const diffY = Math.abs(touchEndY - touchStartY);
 
+            // If it's a tap (not a scroll), and not on a link
             if (diffX < SCROLL_THRESHOLD && diffY < SCROLL_THRESHOLD) {
-                triggerWarning(e);
+                const isInteractive = e.target.closest('a, button, input, textarea');
+                if (!isInteractive) {
+                    triggerWarning(e);
+                }
             }
         }
     });
