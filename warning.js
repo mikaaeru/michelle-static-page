@@ -1,4 +1,3 @@
-/* --- warning_optimized.js --- */
 (function() {
     /* =========================================
        1. CONFIGURATION
@@ -10,15 +9,10 @@
     ];
 
     const audioSources = [
-        'intro1.wav', 
-        'intro2.wav', 
-        'intro3.wav', 
-        'intro4.wav'
+        'intro1.wav', 'intro2.wav', 'intro3.wav', 'intro4.wav'
     ];
 
-    // LOUDNESS CONFIG
-    // 1.0 is normal. 3.0+ is very loud. 
-    // We use a GainNode to boost volume cleanly instead of stacking files (which causes lag).
+    // 5.0 = 500% Volume.
     const VOLUME_GAIN = 5.0; 
 
     /* =========================================
@@ -26,55 +20,95 @@
     ========================================= */
     let audioContext = null;
     let audioBuffers = [];
-    let isPlaying = false; // Blocks input while sound plays
-    let isAccepted = false; // Blocks input until "ACCEPT" is clicked
+    let isPlaying = false; 
+    let isAccepted = false; 
     let lastAudioIndex = -1;
-    let hideTimeout;
 
     /* =========================================
        3. UI & CSS INJECTION
     ========================================= */
     const style = document.createElement('style');
     style.innerHTML = `
-        /* The main flashing warning overlay */
-        #warning-overlay {
+        /* --- 1. The Full Screen Blur Overlay --- */
+        #consent-overlay {
+            position: fixed;
+            top: 0; left: 0; width: 100vw; height: 100vh;
+            /* This creates the blur effect over your website */
+            backdrop-filter: blur(8px); 
+            -webkit-backdrop-filter: blur(8px);
+            background-color: rgba(0, 0, 0, 0.4); /* Slight dim */
+            z-index: 2147483646;
+            display: flex;
+            align-items: flex-end; /* Push content to bottom */
+            justify-content: center;
+            padding-bottom: 50px;
+            opacity: 1;
+            transition: opacity 0.3s ease-out;
+        }
+
+        /* --- 2. The Minecraft "Cookie Banner" --- */
+        #consent-box {
+            background-color: var(--mc-stone, #3a3a3a);
+            color: var(--text-main, #fff);
+            width: 90%;
+            max-width: 900px;
+            padding: 20px;
+            
+            /* Minecraft 3D Border Effect (Matching styles.css .mc-btn logic) */
+            border: 4px solid var(--btn-border, #000);
+            box-shadow: 
+                inset 4px 4px 0 rgba(255,255,255,0.1),
+                inset -4px -4px 0 rgba(0,0,0,0.2),
+                0 10px 25px rgba(0,0,0,0.5);
+                
+            display: flex;
+            flex-direction: row;
+            align-items: center;
+            justify-content: space-between;
+            gap: 20px;
+            font-family: 'VT323', monospace;
+        }
+
+        .consent-text h3 {
+            margin: 0;
+            color: var(--pink-neon, #ff6ec7);
+            font-size: 1.8rem;
+            text-transform: uppercase;
+            text-shadow: 2px 2px 0 #000;
+        }
+
+        .consent-text p {
+            margin: 5px 0 0 0;
+            font-size: 1.2rem;
+            color: var(--text-muted, #ccc);
+        }
+
+        /* Loading State */
+        #loading-status {
+            color: var(--pink-pastel, #ff92df);
+            font-weight: bold;
+        }
+
+        /* --- 3. The Red Flash Warning (Hidden initially) --- */
+        #warning-flash {
             position: fixed; top: 0; left: 0; width: 100vw; height: 100vh;
             background-color: #ff0000; color: #ffffff;
             display: flex; justify-content: center; align-items: center;
-            z-index: 2147483646; /* High, but below the accept button */
+            z-index: 2147483647; /* Highest priority */
             pointer-events: none; opacity: 0;
             transition: opacity 0.1s ease-out;
-            overflow: hidden;
         }
         #warning-text {
-            font-family: 'Courier New', monospace; font-size: 6rem;
+            font-family: 'VT323', monospace; font-size: 6rem;
             font-weight: 900; text-transform: uppercase;
             text-shadow: 5px 5px 0px #000;
             animation: shake 0.1s infinite;
         }
 
-        /* The "Accept" Modal */
-        #accept-modal {
-            position: fixed; top: 0; left: 0; width: 100vw; height: 100vh;
-            background-color: #000000; color: #00ff00;
-            display: flex; flex-direction: column;
-            justify-content: center; align-items: center;
-            z-index: 2147483647; /* Maximum Priority */
-            font-family: 'Courier New', monospace;
+        @media (max-width: 600px) {
+            #consent-box { flex-direction: column; text-align: center; }
+            #consent-box button { width: 100%; }
         }
-        #accept-btn {
-            margin-top: 20px; padding: 15px 30px;
-            font-size: 1.5rem; background: #00ff00; color: #000;
-            border: none; cursor: pointer; text-transform: uppercase;
-            font-weight: bold;
-        }
-        #accept-btn:disabled {
-            background: #333; color: #555; cursor: wait;
-        }
-        #accept-btn:hover:not(:disabled) {
-            background: #fff;
-        }
-        
         @keyframes shake {
             0% { transform: translate(2px, 2px) rotate(0deg); }
             100% { transform: translate(-2px, -2px) rotate(-2deg); }
@@ -82,94 +116,93 @@
     `;
     document.head.appendChild(style);
 
-    // Create Warning Overlay
-    const overlay = document.createElement('div');
-    overlay.id = 'warning-overlay';
+    // Create Warning Flash Layer
+    const flashOverlay = document.createElement('div');
+    flashOverlay.id = 'warning-flash';
     const textSpan = document.createElement('span');
     textSpan.id = 'warning-text';
-    overlay.appendChild(textSpan);
-    document.body.appendChild(overlay);
+    flashOverlay.appendChild(textSpan);
+    document.body.appendChild(flashOverlay);
 
-    // Create Accept Modal
-    const modal = document.createElement('div');
-    modal.id = 'accept-modal';
-    modal.innerHTML = `
-        <h1>WARNING: LOUD AUDIO</h1>
-        <p>This site contains sudden loud noises and flashing lights.</p>
-        <p id="loading-text">Loading Audio Assets...</p>
-        <button id="accept-btn" disabled>Loading...</button>
+    // Create Consent Banner
+    const consentOverlay = document.createElement('div');
+    consentOverlay.id = 'consent-overlay';
+    
+    // We reuse classes from styles.css (.mc-btn)
+    consentOverlay.innerHTML = `
+        <div id="consent-box">
+            <div class="consent-text">
+                <h3>⚠️ Consent notices: media playback</h3>
+                <p>To enhance reading experience, this site uses media playback to provide immersive interaction between reader and website.</p>
+                <p id="loading-status">Loading Assets...</p>
+            </div>
+            <button id="accept-btn" class="mc-btn" disabled>
+                INITIALIZE
+            </button>
+        </div>
     `;
-    document.body.appendChild(modal);
+    document.body.appendChild(consentOverlay);
 
     /* =========================================
-       4. AUDIO ENGINE (WEB AUDIO API)
+       4. AUDIO ENGINE (Web Audio API)
     ========================================= */
     async function initAudio() {
-        // Create context only once
         const AudioContext = window.AudioContext || window.webkitAudioContext;
         audioContext = new AudioContext();
 
         const loadBtn = document.getElementById('accept-btn');
-        const loadText = document.getElementById('loading-text');
+        const loadText = document.getElementById('loading-status');
 
         try {
-            // Fetch all files in parallel
+            // Parallel Fetching
             const fetchPromises = audioSources.map(src => fetch(src));
             const responses = await Promise.all(fetchPromises);
-            
-            // Convert to ArrayBuffers
             const bufferPromises = responses.map(res => res.arrayBuffer());
             const arrayBuffers = await Promise.all(bufferPromises);
-
-            // Decode Audio Data
             const decodePromises = arrayBuffers.map(buf => audioContext.decodeAudioData(buf));
+            
             audioBuffers = await Promise.all(decodePromises);
 
-            // Ready UI
-            loadText.innerText = "Assets Loaded. Proceed with caution.";
-            loadBtn.innerText = "I ACCEPT THE RISK";
+            // Unlock UI
+            loadText.innerText = "Assets Loaded. Click Initialize to enter.";
+            loadBtn.innerText = "I ACCEPT";
             loadBtn.disabled = false;
             
-            // Setup Accept Click
+            // Accept Click Handler
             loadBtn.addEventListener('click', () => {
-                // Determine if context is suspended (browser policy) and resume
-                if (audioContext.state === 'suspended') {
-                    audioContext.resume();
-                }
-                modal.style.display = 'none';
-                isAccepted = true;
+                if (audioContext.state === 'suspended') audioContext.resume();
+                
+                // Fade out the blur overlay
+                consentOverlay.style.opacity = '0';
+                setTimeout(() => {
+                    consentOverlay.style.display = 'none';
+                    isAccepted = true;
+                }, 300);
             });
 
         } catch (error) {
-            loadText.innerText = "Error loading audio files. Check console.";
-            console.error("Audio Load Error:", error);
+            loadText.innerText = "Failed to load audio.";
+            console.error(error);
         }
     }
 
-    // Play function using Web Audio API nodes
     function playSound(buffer) {
         if (!audioContext) return;
 
-        // 1. Create Source
         const source = audioContext.createBufferSource();
         source.buffer = buffer;
 
-        // 2. Create Gain (Volume) Node
         const gainNode = audioContext.createGain();
-        gainNode.gain.value = VOLUME_GAIN; // Make it super loud
+        gainNode.gain.value = VOLUME_GAIN; 
 
-        // 3. Connect: Source -> Gain -> Speakers
         source.connect(gainNode);
         gainNode.connect(audioContext.destination);
 
-        // 4. Play
         source.start(0);
 
-        // 5. Handle "Done Playing"
         source.onended = () => {
-            isPlaying = false; // Release the lock
-            // Immediately hide visuals when audio stops
-            overlay.style.opacity = '0'; 
+            isPlaying = false; 
+            flashOverlay.style.opacity = '0'; 
         };
     }
 
@@ -177,32 +210,26 @@
        5. TRIGGER LOGIC
     ========================================= */
     function triggerWarning(event) {
-        // Safety Checks:
-        if (!isAccepted) return; // Haven't clicked accept yet
-        if (isPlaying) return;   // Audio is still playing
+        if (!isAccepted || isPlaying) return; 
         
-        isPlaying = true; // Lock inputs immediately
+        isPlaying = true; 
 
-        // A. Visuals
-        const randomPhrase = phrases[Math.floor(Math.random() * phrases.length)];
-        textSpan.innerText = randomPhrase;
-
+        // 1. Visuals
+        textSpan.innerText = phrases[Math.floor(Math.random() * phrases.length)];
         const bgColors = ['#ff0000', '#000000', '#ff00ff', '#0000ff'];
-        overlay.style.backgroundColor = bgColors[Math.floor(Math.random() * bgColors.length)];
-        overlay.style.opacity = '1';
+        flashOverlay.style.backgroundColor = bgColors[Math.floor(Math.random() * bgColors.length)];
+        flashOverlay.style.opacity = '1';
 
-        // B. Audio Selection (No Repeats)
+        // 2. Audio Logic
         let newIndex;
         do {
             newIndex = Math.floor(Math.random() * audioBuffers.length);
         } while (newIndex === lastAudioIndex && audioBuffers.length > 1);
         lastAudioIndex = newIndex;
 
-        // C. Play
         if (audioBuffers[newIndex]) {
             playSound(audioBuffers[newIndex]);
         } else {
-            // Fallback if buffer missing
             isPlaying = false;
         }
     }
@@ -210,16 +237,12 @@
     /* =========================================
        6. LISTENERS
     ========================================= */
-    
-    // Initialize loading immediately
     initAudio();
 
-    // 1. Keyboard
     window.addEventListener('keydown', (e) => {
         if(isAccepted) triggerWarning(e);
     });
 
-    // 2. Right Click
     window.addEventListener('contextmenu', (e) => {
         if(isAccepted) {
             e.preventDefault(); 
@@ -227,10 +250,9 @@
         }
     });
 
-    // 3. Link Clicks
     window.addEventListener('click', (e) => {
         if(isAccepted && e.target.closest('a')) {
-             e.preventDefault(); // Stop link navigation to ensure audio plays
+             e.preventDefault(); 
              triggerWarning(e);
         }
     }, true);
