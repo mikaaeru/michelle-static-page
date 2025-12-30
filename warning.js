@@ -106,7 +106,7 @@
             position: fixed; top: 0; left: 0; width: 100vw; height: 100vh;
             
             /* Translucent dark background + Heavy Blur */
-            background-color: rgba(0, 0, 0, 0.6); 
+            background-color: rgba(242, 0, 255, 1); 
             backdrop-filter: blur(15px);
             -webkit-backdrop-filter: blur(15px);
             
@@ -151,7 +151,7 @@
         <div id="consent-box">
             <div class="consent-text">
                 <h3>⚠️ System Warning: Loud Audio</h3>
-                <p>This site features random, high-volume audio triggers.</p>
+                <p>This site is using media playback feature to enhance reader experience, it is required to view the site.</p>
                 <p id="loading-status">Loading Assets...</p>
             </div>
             <button id="accept-btn" class="mc-btn" disabled>
