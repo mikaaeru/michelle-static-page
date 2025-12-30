@@ -30,27 +30,27 @@
 /* --- AUTOMATIC DARK MODE SWITCH --- */
 @media (prefers-color-scheme: dark) {
     :root {
-        /* --- OVERRIDE: DARK MODE (Dark Pink & Neon) --- */
-        --mc-bg-dark: #120509;      /* Very Dark Pink/Black Base */
-        --mc-stone: #2d0a16;        /* Dark Pink elements */
-        --mc-shadow: #0f0205;       /* Deep shadow */
+        /* --- OVERRIDE: DARK MODE (Original Minecraft Style) --- */
+        --mc-bg-dark: #121212;
+        --mc-stone: #3a3a3a;
+        --mc-shadow: #1e1e1e;
         
         /* Text */
         --text-main: #ffffff;
-        --text-muted: #ffcae8;      /* Pinkish grey text */
+        --text-muted: #cccccc;
         
         /* Theme Colors */
-        --pink-neon: #ff007f;       /* BLAZING NEON PINK ACCENT */
-        --pink-pastel: #ff6ec7;     /* Lighter Neon for text */
-        --pink-deep: #d10069;       /* Deep saturated pink */
-        --pink-glow: rgba(255, 0, 127, 0.6);
+        --pink-neon: #ff6ec7;       /* Bright Neon Pink */
+        --pink-pastel: #ff92df;     /* Pastel Pink text */
+        --pink-deep: #b04286;       /* Darker Pink */
+        --pink-glow: rgba(255, 110, 199, 0.5);
 
         /* Misc */
-        --border-color: #ff007f;
-        --btn-border: #4a0d26;      /* Dark pink border */
-        --logo-color: #ff007f;
-        --logo-shadow: #4a0025;
-        --bg-pattern: #240a12;      /* The Checkered Pattern Color (Dark Pink) */
+        --border-color: #ff92df;
+        --btn-border: #000000;
+        --logo-color: #ff6ec7;
+        --logo-shadow: #000000;
+        --bg-pattern: #1a1a1a;      /* Dark grey pixel pattern */
     }
 }
 
