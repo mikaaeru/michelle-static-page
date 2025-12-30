@@ -5,15 +5,14 @@
     const phrases = [
         "STOP", "DON'T TOUCH", "NO!", "YAMETEEEEEE!", "やめて!", 
         "DAME!", "BAKA!", "ERROR", "FATAL", "FORBIDDEN", 
-        "DON'T CLICK", "SYSTEM HALT", "KYAAAAA!", "HANDS OFF"
+        "SYSTEM HALT", "KYAAAAA!", "HANDS OFF"
     ];
 
-    // Ensure these files exist in your Cloudflare Pages 'public' or root folder
     const audioSources = [
         'intro1.wav', 'intro2.wav', 'intro3.wav', 'intro4.wav'
     ];
 
-    // 5.0 = 500% Volume. Use with caution.
+    // 5.0 = 500% Volume.
     const VOLUME_GAIN = 5.0; 
 
     /* =========================================
@@ -30,42 +29,81 @@
     ========================================= */
     const style = document.createElement('style');
     style.innerHTML = `
-        /* --- 1. The Full Screen Blur Overlay --- */
+        /* --- 1. The Full Screen Blur Overlay (Consent) --- */
         #consent-overlay {
-            position: fixed; top: 0; left: 0; width: 100vw; height: 100vh;
-            backdrop-filter: blur(8px); -webkit-backdrop-filter: blur(8px);
-            background-color: rgba(0, 0, 0, 0.4);
+            position: fixed;
+            top: 0; left: 0; width: 100vw; height: 100vh;
+            backdrop-filter: blur(8px); 
+            -webkit-backdrop-filter: blur(8px);
+            background-color: rgba(0, 0, 0, 0.4); 
             z-index: 2147483646;
-            display: flex; align-items: flex-end; justify-content: center;
-            padding-bottom: 50px; opacity: 1; transition: opacity 0.3s ease-out;
+            display: flex;
+            align-items: flex-end; 
+            justify-content: center;
+            padding-bottom: 50px;
+            opacity: 1;
+            transition: opacity 0.3s ease-out;
         }
 
-        /* --- 2. The Consent Box --- */
+        /* --- 2. The Minecraft "Cookie Banner" --- */
         #consent-box {
-            background-color: #3a3a3a; color: #fff;
-            width: 90%; max-width: 900px; padding: 20px;
-            border: 4px solid #000;
-            box-shadow: inset 4px 4px 0 rgba(255,255,255,0.1), inset -4px -4px 0 rgba(0,0,0,0.2), 0 10px 25px rgba(0,0,0,0.5);
-            display: flex; flex-direction: row; align-items: center; justify-content: space-between;
-            gap: 20px; font-family: 'VT323', monospace;
+            background-color: var(--mc-stone, #3a3a3a);
+            color: var(--text-main, #fff);
+            width: 90%;
+            max-width: 900px;
+            padding: 20px;
+            border: 4px solid var(--btn-border, #000);
+            box-shadow: 
+                inset 4px 4px 0 rgba(255,255,255,0.1),
+                inset -4px -4px 0 rgba(0,0,0,0.2),
+                0 10px 25px rgba(0,0,0,0.5);   
+            display: flex;
+            flex-direction: row;
+            align-items: center;
+            justify-content: space-between;
+            gap: 20px;
+            font-family: 'VT323', monospace;
         }
 
-        .consent-text h3 { margin: 0; color: #ff6ec7; font-size: 1.8rem; text-transform: uppercase; text-shadow: 2px 2px 0 #000; }
-        .consent-text p { margin: 5px 0 0 0; font-size: 1.2rem; color: #ccc; }
-        #loading-status { color: #ff92df; font-weight: bold; }
+        .consent-text h3 {
+            margin: 0;
+            color: var(--pink-neon, #ff6ec7);
+            font-size: 1.8rem;
+            text-transform: uppercase;
+            text-shadow: 2px 2px 0 #000;
+        }
 
-        /* --- 3. The Red Flash Warning --- */
+        .consent-text p {
+            margin: 5px 0 0 0;
+            font-size: 1.2rem;
+            color: var(--text-muted, #ccc);
+        }
+
+        #loading-status {
+            color: var(--pink-pastel, #ff92df);
+            font-weight: bold;
+        }
+
+        /* --- 3. The Warning Flash (UPDATED: BLUR STYLE) --- */
         #warning-flash {
             position: fixed; top: 0; left: 0; width: 100vw; height: 100vh;
-            background-color: #ff0000; color: #ffffff;
+            
+            /* CHANGED: Translucent dark background + Heavy Blur */
+            background-color: rgba(0, 0, 0, 0.6); 
+            backdrop-filter: blur(15px);
+            -webkit-backdrop-filter: blur(15px);
+            
+            color: #ffffff;
             display: flex; justify-content: center; align-items: center;
-            z-index: 2147483647; pointer-events: none; opacity: 0;
+            z-index: 2147483647; 
+            pointer-events: none; opacity: 0;
             transition: opacity 0.1s ease-out;
         }
         #warning-text {
             font-family: 'VT323', monospace; font-size: 6rem;
             font-weight: 900; text-transform: uppercase;
-            text-shadow: 5px 5px 0px #000;
+            /* Added red glow to text to make it pop against the blur */
+            text-shadow: 0 0 20px rgba(255, 0, 0, 0.8), 4px 4px 0px #000;
             animation: shake 0.1s infinite;
         }
 
@@ -80,6 +118,7 @@
     `;
     document.head.appendChild(style);
 
+    // Create Warning Flash Layer
     const flashOverlay = document.createElement('div');
     flashOverlay.id = 'warning-flash';
     const textSpan = document.createElement('span');
@@ -87,8 +126,10 @@
     flashOverlay.appendChild(textSpan);
     document.body.appendChild(flashOverlay);
 
+    // Create Consent Banner
     const consentOverlay = document.createElement('div');
     consentOverlay.id = 'consent-overlay';
+    
     consentOverlay.innerHTML = `
         <div id="consent-box">
             <div class="consent-text">
@@ -96,7 +137,7 @@
                 <p>This site features random, high-volume audio triggers.</p>
                 <p id="loading-status">Loading Assets...</p>
             </div>
-            <button id="accept-btn" class="mc-btn" disabled style="padding: 10px 20px; font-family: inherit; font-size: 1.2rem; cursor: pointer; border: 2px solid #000; background: #ccc; color: #000;">
+            <button id="accept-btn" class="mc-btn" disabled>
                 INITIALIZE
             </button>
         </div>
@@ -114,6 +155,7 @@
         const loadText = document.getElementById('loading-status');
 
         try {
+            // Parallel Fetching
             const fetchPromises = audioSources.map(src => fetch(src));
             const responses = await Promise.all(fetchPromises);
             const bufferPromises = responses.map(res => res.arrayBuffer());
@@ -122,12 +164,15 @@
             
             audioBuffers = await Promise.all(decodePromises);
 
+            // Unlock UI
             loadText.innerText = "Assets Loaded. Click Initialize to enter.";
             loadBtn.innerText = "I ACCEPT";
             loadBtn.disabled = false;
             
+            // Accept Click Handler
             loadBtn.addEventListener('click', () => {
                 if (audioContext.state === 'suspended') audioContext.resume();
+                
                 consentOverlay.style.opacity = '0';
                 setTimeout(() => {
                     consentOverlay.style.display = 'none';
@@ -136,13 +181,12 @@
             });
 
         } catch (error) {
-            loadText.innerText = "Failed to load audio. Check console.";
+            loadText.innerText = "Failed to load audio.";
             console.error(error);
         }
     }
 
-    // UPDATED: Accepts an optional callback function to run when audio ends
-    function playSound(buffer, onComplete) {
+    function playSound(buffer) {
         if (!audioContext) return;
 
         const source = audioContext.createBufferSource();
@@ -159,27 +203,22 @@
         source.onended = () => {
             isPlaying = false; 
             flashOverlay.style.opacity = '0'; 
-            
-            // Execute the navigation or cleanup callback if provided
-            if (onComplete && typeof onComplete === 'function') {
-                onComplete();
-            }
         };
     }
 
     /* =========================================
        5. TRIGGER LOGIC
     ========================================= */
-    // UPDATED: Accepts an optional event or data, and a callback
-    function triggerWarning(callback) {
+    function triggerWarning(event) {
         if (!isAccepted || isPlaying) return; 
         
         isPlaying = true; 
 
         // 1. Visuals
         textSpan.innerText = phrases[Math.floor(Math.random() * phrases.length)];
-        const bgColors = ['#ff0000', '#000000', '#ff00ff', '#0000ff'];
-        flashOverlay.style.backgroundColor = bgColors[Math.floor(Math.random() * bgColors.length)];
+        
+        // CHANGED: Removed the random solid background color logic.
+        // It now relies on the CSS backdrop-filter blur.
         flashOverlay.style.opacity = '1';
 
         // 2. Audio Logic
@@ -190,12 +229,9 @@
         lastAudioIndex = newIndex;
 
         if (audioBuffers[newIndex]) {
-            playSound(audioBuffers[newIndex], callback);
+            playSound(audioBuffers[newIndex]);
         } else {
-            // If audio fails for some reason, ensure we still run callback immediately
             isPlaying = false;
-            flashOverlay.style.opacity = '0';
-            if (callback) callback();
         }
     }
 
@@ -204,39 +240,20 @@
     ========================================= */
     initAudio();
 
-    // Trigger on Keydown (No navigation needed)
-    window.addEventListener('keydown', () => {
-        if(isAccepted) triggerWarning();
+    // Trigger on Key Press
+    window.addEventListener('keydown', (e) => {
+        if(isAccepted) triggerWarning(e);
     });
 
-    // Trigger on Context Menu (No navigation needed)
+    // Trigger on Right Click
     window.addEventListener('contextmenu', (e) => {
         if(isAccepted) {
             e.preventDefault(); 
-            triggerWarning();
+            triggerWarning(e);
         }
     });
 
-    // Trigger on Link Click (Navigation REQUIRED)
-    window.addEventListener('click', (e) => {
-        const link = e.target.closest('a');
-        
-        // Only hijack if it's an accepted state and a valid link
-        if(isAccepted && link) {
-             e.preventDefault(); 
-             
-             const targetUrl = link.href;
-             const targetWindow = link.target;
-
-             // Pass the navigation logic as the callback
-             triggerWarning(() => {
-                 if (targetWindow === '_blank') {
-                     window.open(targetUrl, '_blank');
-                 } else {
-                     window.location.href = targetUrl;
-                 }
-             });
-        }
-    }, true);
+    // CHANGED: Removed the 'click' listener that targeted <a> tags.
+    // Links will now work normally.
 
 })();
