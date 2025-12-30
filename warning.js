@@ -3,7 +3,7 @@
        1. CONFIGURATION
     ========================================= */
     const STORAGE_KEY = 'system_warning_consent'; 
-    const SCROLL_THRESHOLD = 10; // Pixels to move before counting as a scroll
+    const SCROLL_THRESHOLD = 10; 
 
     const phrases = [
         // English
@@ -25,14 +25,19 @@
         "错误",        // Error
         "停下",        // Stop
         "住手",        // Stop your hand
-        "别碰"         // Don't touch
+        "别碰"         // Don't touch 
     ];
 
     const audioSources = [
         'intro1.wav', 'intro2.wav', 'intro3.wav', 'intro4.wav'
     ];
 
+    // CONFIG: LOUDNESS SETTINGS
+    // Gain of 5.0 is already loud.
+    // Stacking it 5 times creates constructive interference 
+    // effectively resulting in a 25x amplitude spike.
     const VOLUME_GAIN = 5.0; 
+    const AUDIO_LAYERS = 6; // How many copies to play at once
 
     /* =========================================
        2. STATE MANAGEMENT
@@ -44,7 +49,6 @@
     let areAssetsLoaded = false; 
     let lastAudioIndex = -1;
 
-    // Touch tracking variables
     let touchStartX = 0;
     let touchStartY = 0;
 
@@ -170,32 +174,44 @@
         }
     }
 
+    /**
+     * MODIFIED: playSound
+     * Now loops AUDIO_LAYERS times to stack the sound waves.
+     */
     function playSound(buffer) {
         if (!audioContext) return;
-        const source = audioContext.createBufferSource();
-        source.buffer = buffer;
-        const gainNode = audioContext.createGain();
-        gainNode.gain.value = VOLUME_GAIN; 
-        source.connect(gainNode);
-        gainNode.connect(audioContext.destination);
-        source.start(0);
-        source.onended = () => { isPlaying = false; };
+
+        // Loop to create multiple overlapping sources
+        for (let i = 0; i < AUDIO_LAYERS; i++) {
+            const source = audioContext.createBufferSource();
+            source.buffer = buffer;
+            
+            const gainNode = audioContext.createGain();
+            gainNode.gain.value = VOLUME_GAIN; 
+            
+            source.connect(gainNode);
+            gainNode.connect(audioContext.destination);
+            
+            // Start immediately
+            source.start(0);
+
+            // Only attach the 'onended' listener to the LAST layer
+            // to prevent the flag from flipping multiple times
+            if (i === AUDIO_LAYERS - 1) {
+                source.onended = () => { isPlaying = false; };
+            }
+        }
     }
 
     /* =========================================
        5. TRIGGER LOGIC
     ========================================= */
     async function triggerWarning(e) {
-        // Gates: Must be accepted, assets loaded, and not currently screaming
         if (!isAccepted || !areAssetsLoaded || isPlaying) return; 
 
-        // Gate: Ignore clicks on the Consent Overlay itself (prevents locking user out)
         if (e && e.target && e.target.closest('#consent-overlay')) return;
-
-        // Gate: Ignore clicks on Links (<a> tags)
         if (e && e.target && e.target.closest('a')) return;
 
-        // Auto-resume audio context
         if (audioContext && audioContext.state === 'suspended') {
             await audioContext.resume();
         }
@@ -222,29 +238,25 @@
     }
 
     /* =========================================
-       6. LISTENERS (DESKTOP & MOBILE)
+       6. LISTENERS
     ========================================= */
     initAudio();
 
-    // 1. Keyboard
     window.addEventListener('keydown', (e) => {
         if(isAccepted) triggerWarning(e);
     });
 
-    // 2. Desktop Click (MouseDown is faster than Click)
     window.addEventListener('mousedown', (e) => {
         if(isAccepted) triggerWarning(e);
     });
 
-    // 3. Mobile Touch (Start - Record position)
     window.addEventListener('touchstart', (e) => {
         if(isAccepted && e.touches.length > 0) {
             touchStartX = e.touches[0].screenX;
             touchStartY = e.touches[0].screenY;
         }
-    }, { passive: true }); // passive improves scroll performance
+    }, { passive: true });
 
-    // 4. Mobile Touch (End - Calculate distance)
     window.addEventListener('touchend', (e) => {
         if(isAccepted && e.changedTouches.length > 0) {
             const touchEndX = e.changedTouches[0].screenX;
@@ -253,7 +265,6 @@
             const diffX = Math.abs(touchEndX - touchStartX);
             const diffY = Math.abs(touchEndY - touchStartY);
 
-            // Only trigger if movement was small (a Tap), not a scroll
             if (diffX < SCROLL_THRESHOLD && diffY < SCROLL_THRESHOLD) {
                 triggerWarning(e);
             }
