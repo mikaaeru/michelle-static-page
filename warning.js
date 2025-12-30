@@ -133,7 +133,7 @@
         <div id="consent-box">
             <div class="consent-text">
                 <h3>⚠️ Consent notices: media playback</h3>
-                <p>To enhance reading experience, this site uses media playback to provide immersive interaction between reader and website.</p>
+                <p>To enhance reading experience, this site uses media playback to provide immersive interaction between reader and blog.</p>
                 <p id="loading-status">Loading Assets...</p>
             </div>
             <button id="accept-btn" class="mc-btn" disabled>
