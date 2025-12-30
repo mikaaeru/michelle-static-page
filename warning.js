@@ -8,11 +8,12 @@
         "DON'T CLICK", "SYSTEM HALT", "KYAAAAA!", "HANDS OFF"
     ];
 
+    // Ensure these files exist in your Cloudflare Pages 'public' or root folder
     const audioSources = [
         'intro1.wav', 'intro2.wav', 'intro3.wav', 'intro4.wav'
     ];
 
-    // 5.0 = 500% Volume.
+    // 5.0 = 500% Volume. Use with caution.
     const VOLUME_GAIN = 5.0; 
 
     /* =========================================
@@ -31,71 +32,34 @@
     style.innerHTML = `
         /* --- 1. The Full Screen Blur Overlay --- */
         #consent-overlay {
-            position: fixed;
-            top: 0; left: 0; width: 100vw; height: 100vh;
-            /* This creates the blur effect over your website */
-            backdrop-filter: blur(8px); 
-            -webkit-backdrop-filter: blur(8px);
-            background-color: rgba(0, 0, 0, 0.4); /* Slight dim */
+            position: fixed; top: 0; left: 0; width: 100vw; height: 100vh;
+            backdrop-filter: blur(8px); -webkit-backdrop-filter: blur(8px);
+            background-color: rgba(0, 0, 0, 0.4);
             z-index: 2147483646;
-            display: flex;
-            align-items: flex-end; /* Push content to bottom */
-            justify-content: center;
-            padding-bottom: 50px;
-            opacity: 1;
-            transition: opacity 0.3s ease-out;
+            display: flex; align-items: flex-end; justify-content: center;
+            padding-bottom: 50px; opacity: 1; transition: opacity 0.3s ease-out;
         }
 
-        /* --- 2. The Minecraft "Cookie Banner" --- */
+        /* --- 2. The Consent Box --- */
         #consent-box {
-            background-color: var(--mc-stone, #3a3a3a);
-            color: var(--text-main, #fff);
-            width: 90%;
-            max-width: 900px;
-            padding: 20px;
-            
-            /* Minecraft 3D Border Effect (Matching styles.css .mc-btn logic) */
-            border: 4px solid var(--btn-border, #000);
-            box-shadow: 
-                inset 4px 4px 0 rgba(255,255,255,0.1),
-                inset -4px -4px 0 rgba(0,0,0,0.2),
-                0 10px 25px rgba(0,0,0,0.5);
-                
-            display: flex;
-            flex-direction: row;
-            align-items: center;
-            justify-content: space-between;
-            gap: 20px;
-            font-family: 'VT323', monospace;
+            background-color: #3a3a3a; color: #fff;
+            width: 90%; max-width: 900px; padding: 20px;
+            border: 4px solid #000;
+            box-shadow: inset 4px 4px 0 rgba(255,255,255,0.1), inset -4px -4px 0 rgba(0,0,0,0.2), 0 10px 25px rgba(0,0,0,0.5);
+            display: flex; flex-direction: row; align-items: center; justify-content: space-between;
+            gap: 20px; font-family: 'VT323', monospace;
         }
 
-        .consent-text h3 {
-            margin: 0;
-            color: var(--pink-neon, #ff6ec7);
-            font-size: 1.8rem;
-            text-transform: uppercase;
-            text-shadow: 2px 2px 0 #000;
-        }
+        .consent-text h3 { margin: 0; color: #ff6ec7; font-size: 1.8rem; text-transform: uppercase; text-shadow: 2px 2px 0 #000; }
+        .consent-text p { margin: 5px 0 0 0; font-size: 1.2rem; color: #ccc; }
+        #loading-status { color: #ff92df; font-weight: bold; }
 
-        .consent-text p {
-            margin: 5px 0 0 0;
-            font-size: 1.2rem;
-            color: var(--text-muted, #ccc);
-        }
-
-        /* Loading State */
-        #loading-status {
-            color: var(--pink-pastel, #ff92df);
-            font-weight: bold;
-        }
-
-        /* --- 3. The Red Flash Warning (Hidden initially) --- */
+        /* --- 3. The Red Flash Warning --- */
         #warning-flash {
             position: fixed; top: 0; left: 0; width: 100vw; height: 100vh;
             background-color: #ff0000; color: #ffffff;
             display: flex; justify-content: center; align-items: center;
-            z-index: 2147483647; /* Highest priority */
-            pointer-events: none; opacity: 0;
+            z-index: 2147483647; pointer-events: none; opacity: 0;
             transition: opacity 0.1s ease-out;
         }
         #warning-text {
@@ -116,7 +80,6 @@
     `;
     document.head.appendChild(style);
 
-    // Create Warning Flash Layer
     const flashOverlay = document.createElement('div');
     flashOverlay.id = 'warning-flash';
     const textSpan = document.createElement('span');
@@ -124,11 +87,8 @@
     flashOverlay.appendChild(textSpan);
     document.body.appendChild(flashOverlay);
 
-    // Create Consent Banner
     const consentOverlay = document.createElement('div');
     consentOverlay.id = 'consent-overlay';
-    
-    // We reuse classes from styles.css (.mc-btn)
     consentOverlay.innerHTML = `
         <div id="consent-box">
             <div class="consent-text">
@@ -136,7 +96,7 @@
                 <p>This site features random, high-volume audio triggers.</p>
                 <p id="loading-status">Loading Assets...</p>
             </div>
-            <button id="accept-btn" class="mc-btn" disabled>
+            <button id="accept-btn" class="mc-btn" disabled style="padding: 10px 20px; font-family: inherit; font-size: 1.2rem; cursor: pointer; border: 2px solid #000; background: #ccc; color: #000;">
                 INITIALIZE
             </button>
         </div>
@@ -154,7 +114,6 @@
         const loadText = document.getElementById('loading-status');
 
         try {
-            // Parallel Fetching
             const fetchPromises = audioSources.map(src => fetch(src));
             const responses = await Promise.all(fetchPromises);
             const bufferPromises = responses.map(res => res.arrayBuffer());
@@ -163,16 +122,12 @@
             
             audioBuffers = await Promise.all(decodePromises);
 
-            // Unlock UI
             loadText.innerText = "Assets Loaded. Click Initialize to enter.";
             loadBtn.innerText = "I ACCEPT";
             loadBtn.disabled = false;
             
-            // Accept Click Handler
             loadBtn.addEventListener('click', () => {
                 if (audioContext.state === 'suspended') audioContext.resume();
-                
-                // Fade out the blur overlay
                 consentOverlay.style.opacity = '0';
                 setTimeout(() => {
                     consentOverlay.style.display = 'none';
@@ -181,12 +136,13 @@
             });
 
         } catch (error) {
-            loadText.innerText = "Failed to load audio.";
+            loadText.innerText = "Failed to load audio. Check console.";
             console.error(error);
         }
     }
 
-    function playSound(buffer) {
+    // UPDATED: Accepts an optional callback function to run when audio ends
+    function playSound(buffer, onComplete) {
         if (!audioContext) return;
 
         const source = audioContext.createBufferSource();
@@ -203,13 +159,19 @@
         source.onended = () => {
             isPlaying = false; 
             flashOverlay.style.opacity = '0'; 
+            
+            // Execute the navigation or cleanup callback if provided
+            if (onComplete && typeof onComplete === 'function') {
+                onComplete();
+            }
         };
     }
 
     /* =========================================
        5. TRIGGER LOGIC
     ========================================= */
-    function triggerWarning(event) {
+    // UPDATED: Accepts an optional event or data, and a callback
+    function triggerWarning(callback) {
         if (!isAccepted || isPlaying) return; 
         
         isPlaying = true; 
@@ -228,9 +190,12 @@
         lastAudioIndex = newIndex;
 
         if (audioBuffers[newIndex]) {
-            playSound(audioBuffers[newIndex]);
+            playSound(audioBuffers[newIndex], callback);
         } else {
+            // If audio fails for some reason, ensure we still run callback immediately
             isPlaying = false;
+            flashOverlay.style.opacity = '0';
+            if (callback) callback();
         }
     }
 
@@ -239,21 +204,38 @@
     ========================================= */
     initAudio();
 
-    window.addEventListener('keydown', (e) => {
-        if(isAccepted) triggerWarning(e);
+    // Trigger on Keydown (No navigation needed)
+    window.addEventListener('keydown', () => {
+        if(isAccepted) triggerWarning();
     });
 
+    // Trigger on Context Menu (No navigation needed)
     window.addEventListener('contextmenu', (e) => {
         if(isAccepted) {
             e.preventDefault(); 
-            triggerWarning(e);
+            triggerWarning();
         }
     });
 
+    // Trigger on Link Click (Navigation REQUIRED)
     window.addEventListener('click', (e) => {
-        if(isAccepted && e.target.closest('a')) {
+        const link = e.target.closest('a');
+        
+        // Only hijack if it's an accepted state and a valid link
+        if(isAccepted && link) {
              e.preventDefault(); 
-             triggerWarning(e);
+             
+             const targetUrl = link.href;
+             const targetWindow = link.target;
+
+             // Pass the navigation logic as the callback
+             triggerWarning(() => {
+                 if (targetWindow === '_blank') {
+                     window.open(targetUrl, '_blank');
+                 } else {
+                     window.location.href = targetUrl;
+                 }
+             });
         }
     }, true);
 
