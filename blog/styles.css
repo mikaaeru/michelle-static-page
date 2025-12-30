@@ -128,14 +128,12 @@ a { text-decoration: none; color: inherit; }
 }
 
 /* --- HEADER --- */
-header {
+/* CHANGED: 'body > header' ensures only the top bar is sticky, not article titles */
+body > header {
     /* Semi-transparent background adapts to mode */
     background: color-mix(in srgb, var(--mc-bg-dark) 90%, transparent); 
     border-bottom: var(--border-width) solid var(--pink-deep);
-    
-    /* CHANGED: Relative prevents it from sticking and covering content */
-    position: relative; 
-    
+    position: sticky; /* Keep it sticky as requested */
     top: 0;
     z-index: 100;
     padding: 1rem 0;
@@ -228,12 +226,6 @@ main {
     max-width: var(--container-width);
     margin: 40px auto;
     padding: 0 20px;
-}
-
-/* NEW: This adds padding inside the article so text doesn't touch the border */
-.article-container {
-    padding: 40px;
-    overflow: hidden; /* Prevents large images from breaking layout */
 }
 
 .hero {
@@ -417,8 +409,25 @@ footer {
     .blog-grid {
         grid-template-columns: 1fr; 
     }
+}
 
-    /* Reduce padding on mobile so it doesn't look too squished */
+
+/* --- ADDED FIXES --- */
+
+/* Fix: Article container padding so text doesn't touch borders */
+.article-container {
+    padding: 40px;
+    overflow: hidden;
+}
+
+/* Fix: Extra padding for the page title so it doesn't feel cramped */
+.article-meta {
+    padding-top: 40px;
+    padding-bottom: 20px;
+}
+
+/* Mobile adjustments for the new container */
+@media (max-width: 768px) {
     .article-container {
         padding: 20px;
     }
