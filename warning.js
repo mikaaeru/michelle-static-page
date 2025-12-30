@@ -3,7 +3,7 @@
        1. CONFIGURATION
     ========================================= */
     const STORAGE_KEY = 'system_warning_consent'; 
-    const SCROLL_THRESHOLD = 10; 
+    const SCROLL_THRESHOLD = 10; // Pixels to move before counting as a scroll
 
     const phrases = [
         // English
@@ -44,13 +44,14 @@
     let areAssetsLoaded = false; 
     let lastAudioIndex = -1;
 
+    // Touch tracking variables
     let touchStartX = 0;
     let touchStartY = 0;
 
     const hasPriorConsent = localStorage.getItem(STORAGE_KEY) === 'true';
 
     /* =========================================
-       3. UI & CSS INJECTION (HDR UPGRADED)
+       3. UI & CSS INJECTION
     ========================================= */
     const style = document.createElement('style');
     style.innerHTML = `
@@ -75,59 +76,21 @@
         .consent-text p { margin: 5px 0 0 0; font-size: 1.2rem; color: #ccc; }
         #loading-status { color: #ff92df; font-weight: bold; }
         
-        /* =============================================
-           WARNING FLASH (HDR ENHANCED)
-           =============================================
-        */
+        /* Warning Flash */
         #warning-flash {
             position: fixed; top: 0; left: 0; width: 100vw; height: 100vh;
+            background-color: rgba(242, 0, 255, 1); 
+            backdrop-filter: blur(15px); -webkit-backdrop-filter: blur(15px);
+            color: #ffffff; display: flex; justify-content: center; align-items: center;
             z-index: 2147483647; pointer-events: none; opacity: 0;
             transition: opacity 0.05s ease-out; 
-            display: flex; justify-content: center; align-items: center;
-            will-change: opacity, filter;
-
-            /* 1. Base Fallback (Standard sRGB) */
-            background-color: rgba(255, 0, 255, 0.9);
-            
-            /* 2. Backdrop Explosion: Blows out the brightness of content BEHIND the flash */
-            backdrop-filter: blur(10px) brightness(500%);
-            -webkit-backdrop-filter: blur(10px) brightness(500%);
         }
-
-        /* 3. HDR Activation for compatible displays (OLED, Mini-LED, Apple XDR) */
-        @media (dynamic-range: high) {
-            #warning-flash {
-                /* Using CSS Color Level 4 'color()' syntax.
-                   Standard white is 1.0. We request 4.0 to force the display into 
-                   peak brightness (EDR/HDR Headroom).
-                */
-                background-color: color(display-p3 4.0 0 4.0); 
-                
-                /* Gradient trick to force GPU to render in higher bit-depth on some engines */
-                background-image: linear-gradient(
-                    180deg, 
-                    color(display-p3 4.0 0 4.0), 
-                    color(display-p3 4.0 0.5 4.0)
-                );
-
-                /* Additive blending adds the light to the screen rather than covering it */
-                mix-blend-mode: plus-lighter; 
-            }
-        }
-
         #warning-text {
             font-family: 'VT323', monospace; font-size: 6rem;
             font-weight: 900; text-transform: uppercase;
-            
-            /* High Contrast Shadow for legibility against bright flash */
-            text-shadow: 
-                0 0 30px rgba(255, 255, 255, 1), 
-                4px 4px 0px #000;
-            
+            text-shadow: 0 0 20px rgba(255, 0, 0, 0.8), 4px 4px 0px #000;
             animation: shake 0.1s infinite;
-            color: #fff;
         }
-
         @media (max-width: 600px) {
             #consent-box { flex-direction: column; text-align: center; }
             #consent-box button { width: 100%; }
@@ -167,7 +130,7 @@
     document.body.appendChild(consentOverlay);
 
     /* =========================================
-       4. AUDIO ENGINE
+       4. AUDIO ENGINE (Web Audio API)
     ========================================= */
     async function initAudio() {
         const AudioContext = window.AudioContext || window.webkitAudioContext;
@@ -223,10 +186,16 @@
        5. TRIGGER LOGIC
     ========================================= */
     async function triggerWarning(e) {
+        // Gates: Must be accepted, assets loaded, and not currently screaming
         if (!isAccepted || !areAssetsLoaded || isPlaying) return; 
+
+        // Gate: Ignore clicks on the Consent Overlay itself (prevents locking user out)
         if (e && e.target && e.target.closest('#consent-overlay')) return;
+
+        // Gate: Ignore clicks on Links (<a> tags)
         if (e && e.target && e.target.closest('a')) return;
 
+        // Auto-resume audio context
         if (audioContext && audioContext.state === 'suspended') {
             await audioContext.resume();
         }
@@ -236,8 +205,6 @@
         // 1. Visuals
         textSpan.innerText = phrases[Math.floor(Math.random() * phrases.length)];
         flashOverlay.style.opacity = '1';
-        
-        // Short timeout for flash duration
         setTimeout(() => { flashOverlay.style.opacity = '0'; }, 100);
 
         // 2. Audio
@@ -255,25 +222,29 @@
     }
 
     /* =========================================
-       6. LISTENERS
+       6. LISTENERS (DESKTOP & MOBILE)
     ========================================= */
     initAudio();
 
+    // 1. Keyboard
     window.addEventListener('keydown', (e) => {
         if(isAccepted) triggerWarning(e);
     });
 
+    // 2. Desktop Click (MouseDown is faster than Click)
     window.addEventListener('mousedown', (e) => {
         if(isAccepted) triggerWarning(e);
     });
 
+    // 3. Mobile Touch (Start - Record position)
     window.addEventListener('touchstart', (e) => {
         if(isAccepted && e.touches.length > 0) {
             touchStartX = e.touches[0].screenX;
             touchStartY = e.touches[0].screenY;
         }
-    }, { passive: true }); 
+    }, { passive: true }); // passive improves scroll performance
 
+    // 4. Mobile Touch (End - Calculate distance)
     window.addEventListener('touchend', (e) => {
         if(isAccepted && e.changedTouches.length > 0) {
             const touchEndX = e.changedTouches[0].screenX;
@@ -282,6 +253,7 @@
             const diffX = Math.abs(touchEndX - touchStartX);
             const diffY = Math.abs(touchEndY - touchStartY);
 
+            // Only trigger if movement was small (a Tap), not a scroll
             if (diffX < SCROLL_THRESHOLD && diffY < SCROLL_THRESHOLD) {
                 triggerWarning(e);
             }
