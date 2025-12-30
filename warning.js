@@ -132,8 +132,8 @@
     consentOverlay.innerHTML = `
         <div id="consent-box">
             <div class="consent-text">
-                <h3>⚠️ System Warning: Loud Audio</h3>
-                <p>This site features random, high-volume audio triggers.</p>
+                <h3>⚠️ Consent notices: media playback</h3>
+                <p>To enhance reading experience, this site uses media playback to provide immersive interaction between reader and web.</p>
                 <p id="loading-status">Loading Assets...</p>
             </div>
             <button id="accept-btn" class="mc-btn" disabled>
