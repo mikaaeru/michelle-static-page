@@ -5,7 +5,7 @@
     const phrases = [
         "STOP", "DON'T TOUCH", "NO!", "YAMETEEEEEE!", "やめて!", 
         "DAME!", "BAKA!", "ERROR", "FATAL", "FORBIDDEN", 
-        "SYSTEM HALT", "KYAAAAA!", "HANDS OFF"
+        "DON'T CLICK", "SYSTEM HALT", "KYAAAAA!", "HANDS OFF"
     ];
 
     const audioSources = [
@@ -29,16 +29,17 @@
     ========================================= */
     const style = document.createElement('style');
     style.innerHTML = `
-        /* --- 1. The Full Screen Blur Overlay (Consent) --- */
+        /* --- 1. The Full Screen Blur Overlay --- */
         #consent-overlay {
             position: fixed;
             top: 0; left: 0; width: 100vw; height: 100vh;
+            /* This creates the blur effect over your website */
             backdrop-filter: blur(8px); 
             -webkit-backdrop-filter: blur(8px);
-            background-color: rgba(0, 0, 0, 0.4); 
+            background-color: rgba(0, 0, 0, 0.4); /* Slight dim */
             z-index: 2147483646;
             display: flex;
-            align-items: flex-end; 
+            align-items: flex-end; /* Push content to bottom */
             justify-content: center;
             padding-bottom: 50px;
             opacity: 1;
@@ -52,11 +53,14 @@
             width: 90%;
             max-width: 900px;
             padding: 20px;
+            
+            /* Minecraft 3D Border Effect (Matching styles.css .mc-btn logic) */
             border: 4px solid var(--btn-border, #000);
             box-shadow: 
                 inset 4px 4px 0 rgba(255,255,255,0.1),
                 inset -4px -4px 0 rgba(0,0,0,0.2),
-                0 10px 25px rgba(0,0,0,0.5);   
+                0 10px 25px rgba(0,0,0,0.5);
+                
             display: flex;
             flex-direction: row;
             align-items: center;
@@ -79,31 +83,25 @@
             color: var(--text-muted, #ccc);
         }
 
+        /* Loading State */
         #loading-status {
             color: var(--pink-pastel, #ff92df);
             font-weight: bold;
         }
 
-        /* --- 3. The Warning Flash (UPDATED: BLUR STYLE) --- */
+        /* --- 3. The Red Flash Warning (Hidden initially) --- */
         #warning-flash {
             position: fixed; top: 0; left: 0; width: 100vw; height: 100vh;
-            
-            /* CHANGED: Translucent dark background + Heavy Blur */
-            background-color: rgba(0, 0, 0, 0.6); 
-            backdrop-filter: blur(15px);
-            -webkit-backdrop-filter: blur(15px);
-            
-            color: #ffffff;
+            background-color: #ff0000; color: #ffffff;
             display: flex; justify-content: center; align-items: center;
-            z-index: 2147483647; 
+            z-index: 2147483647; /* Highest priority */
             pointer-events: none; opacity: 0;
             transition: opacity 0.1s ease-out;
         }
         #warning-text {
             font-family: 'VT323', monospace; font-size: 6rem;
             font-weight: 900; text-transform: uppercase;
-            /* Added red glow to text to make it pop against the blur */
-            text-shadow: 0 0 20px rgba(255, 0, 0, 0.8), 4px 4px 0px #000;
+            text-shadow: 5px 5px 0px #000;
             animation: shake 0.1s infinite;
         }
 
@@ -130,6 +128,7 @@
     const consentOverlay = document.createElement('div');
     consentOverlay.id = 'consent-overlay';
     
+    // We reuse classes from styles.css (.mc-btn)
     consentOverlay.innerHTML = `
         <div id="consent-box">
             <div class="consent-text">
@@ -173,6 +172,7 @@
             loadBtn.addEventListener('click', () => {
                 if (audioContext.state === 'suspended') audioContext.resume();
                 
+                // Fade out the blur overlay
                 consentOverlay.style.opacity = '0';
                 setTimeout(() => {
                     consentOverlay.style.display = 'none';
@@ -216,9 +216,8 @@
 
         // 1. Visuals
         textSpan.innerText = phrases[Math.floor(Math.random() * phrases.length)];
-        
-        // CHANGED: Removed the random solid background color logic.
-        // It now relies on the CSS backdrop-filter blur.
+        const bgColors = ['#ff0000', '#000000', '#ff00ff', '#0000ff'];
+        flashOverlay.style.backgroundColor = bgColors[Math.floor(Math.random() * bgColors.length)];
         flashOverlay.style.opacity = '1';
 
         // 2. Audio Logic
@@ -240,12 +239,10 @@
     ========================================= */
     initAudio();
 
-    // Trigger on Key Press
     window.addEventListener('keydown', (e) => {
         if(isAccepted) triggerWarning(e);
     });
 
-    // Trigger on Right Click
     window.addEventListener('contextmenu', (e) => {
         if(isAccepted) {
             e.preventDefault(); 
@@ -253,7 +250,11 @@
         }
     });
 
-    // CHANGED: Removed the 'click' listener that targeted <a> tags.
-    // Links will now work normally.
+    window.addEventListener('click', (e) => {
+        if(isAccepted && e.target.closest('a')) {
+             e.preventDefault(); 
+             triggerWarning(e);
+        }
+    }, true);
 
 })();
