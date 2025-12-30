@@ -2,7 +2,8 @@
     /* =========================================
        1. CONFIGURATION
     ========================================= */
-    const STORAGE_KEY = 'system_warning_consent'; // Key for remembering choice
+    const STORAGE_KEY = 'system_warning_consent'; 
+    const SCROLL_THRESHOLD = 10; // Pixels to move before counting as a scroll
 
     const phrases = [
         // English
@@ -39,11 +40,14 @@
     let audioContext = null;
     let audioBuffers = [];
     let isPlaying = false; 
-    let isAccepted = false; // logic gate
-    let areAssetsLoaded = false; // prevents errors if user types before fetch finishes
+    let isAccepted = false; 
+    let areAssetsLoaded = false; 
     let lastAudioIndex = -1;
 
-    // Check if user previously accepted
+    // Touch tracking variables
+    let touchStartX = 0;
+    let touchStartY = 0;
+
     const hasPriorConsent = localStorage.getItem(STORAGE_KEY) === 'true';
 
     /* =========================================
@@ -108,7 +112,6 @@
     const consentOverlay = document.createElement('div');
     consentOverlay.id = 'consent-overlay';
     
-    // IF already consented, hide overlay immediately via inline style
     if (hasPriorConsent) {
         consentOverlay.style.display = 'none';
         isAccepted = true; 
@@ -144,19 +147,14 @@
             const decodePromises = arrayBuffers.map(buf => audioContext.decodeAudioData(buf));
             
             audioBuffers = await Promise.all(decodePromises);
-            
-            // Mark assets as ready
             areAssetsLoaded = true;
 
-            // Update UI for new users
             loadText.innerText = "Assets Loaded. Click Initialize to enter.";
             loadBtn.innerText = "I ACCEPT";
             loadBtn.disabled = false;
             
             loadBtn.addEventListener('click', () => {
                 if (audioContext.state === 'suspended') audioContext.resume();
-                
-                // Save to storage
                 localStorage.setItem(STORAGE_KEY, 'true');
 
                 consentOverlay.style.opacity = '0';
@@ -174,7 +172,6 @@
 
     function playSound(buffer) {
         if (!audioContext) return;
-
         const source = audioContext.createBufferSource();
         source.buffer = buffer;
         const gainNode = audioContext.createGain();
@@ -182,18 +179,23 @@
         source.connect(gainNode);
         gainNode.connect(audioContext.destination);
         source.start(0);
-
         source.onended = () => { isPlaying = false; };
     }
 
     /* =========================================
        5. TRIGGER LOGIC
     ========================================= */
-    async function triggerWarning(event) {
-        // Must be accepted AND files must be loaded
+    async function triggerWarning(e) {
+        // Gates: Must be accepted, assets loaded, and not currently screaming
         if (!isAccepted || !areAssetsLoaded || isPlaying) return; 
 
-        // Auto-resume context if it was suspended (common on reloads)
+        // Gate: Ignore clicks on the Consent Overlay itself (prevents locking user out)
+        if (e && e.target && e.target.closest('#consent-overlay')) return;
+
+        // Gate: Ignore clicks on Links (<a> tags)
+        if (e && e.target && e.target.closest('a')) return;
+
+        // Auto-resume audio context
         if (audioContext && audioContext.state === 'suspended') {
             await audioContext.resume();
         }
@@ -220,18 +222,41 @@
     }
 
     /* =========================================
-       6. LISTENERS
+       6. LISTENERS (DESKTOP & MOBILE)
     ========================================= */
     initAudio();
 
+    // 1. Keyboard
     window.addEventListener('keydown', (e) => {
         if(isAccepted) triggerWarning(e);
     });
 
-    window.addEventListener('contextmenu', (e) => {
-        if(isAccepted) {
-            e.preventDefault(); 
-            triggerWarning(e);
+    // 2. Desktop Click (MouseDown is faster than Click)
+    window.addEventListener('mousedown', (e) => {
+        if(isAccepted) triggerWarning(e);
+    });
+
+    // 3. Mobile Touch (Start - Record position)
+    window.addEventListener('touchstart', (e) => {
+        if(isAccepted && e.touches.length > 0) {
+            touchStartX = e.touches[0].screenX;
+            touchStartY = e.touches[0].screenY;
+        }
+    }, { passive: true }); // passive improves scroll performance
+
+    // 4. Mobile Touch (End - Calculate distance)
+    window.addEventListener('touchend', (e) => {
+        if(isAccepted && e.changedTouches.length > 0) {
+            const touchEndX = e.changedTouches[0].screenX;
+            const touchEndY = e.changedTouches[0].screenY;
+            
+            const diffX = Math.abs(touchEndX - touchStartX);
+            const diffY = Math.abs(touchEndY - touchStartY);
+
+            // Only trigger if movement was small (a Tap), not a scroll
+            if (diffX < SCROLL_THRESHOLD && diffY < SCROLL_THRESHOLD) {
+                triggerWarning(e);
+            }
         }
     });
 
