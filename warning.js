@@ -33,11 +33,8 @@
     ];
 
     // CONFIG: LOUDNESS SETTINGS
-    // Gain of 5.0 is already loud.
-    // Stacking it 5 times creates constructive interference 
-    // effectively resulting in a 25x amplitude spike.
     const VOLUME_GAIN = 5.0; 
-    const AUDIO_LAYERS = 6; // How many copies to play at once
+    const AUDIO_LAYERS = 6; 
 
     /* =========================================
        2. STATE MANAGEMENT
@@ -59,6 +56,20 @@
     ========================================= */
     const style = document.createElement('style');
     style.innerHTML = `
+        /* DISABLE SELECTION GLOBALLY */
+        html, body {
+            -webkit-user-select: none; /* Safari */
+            -moz-user-select: none;    /* Firefox */
+            -ms-user-select: none;     /* IE10+/Edge */
+            user-select: none;         /* Standard */
+            -webkit-touch-callout: none; /* iOS Safari */
+            overflow-x: hidden;
+            cursor: progress; /* Psychological annoyance */
+        }
+        
+        /* Disable interaction on images specifically */
+        img { pointer-events: none; }
+
         /* Overlay styles */
         #consent-overlay {
             position: fixed; top: 0; left: 0; width: 100vw; height: 100vh;
@@ -67,6 +78,7 @@
             z-index: 2147483646;
             display: flex; align-items: flex-end; justify-content: center;
             padding-bottom: 50px; opacity: 1; transition: opacity 0.3s ease-out;
+            cursor: default; /* Reset cursor for overlay */
         }
         #consent-box {
             background-color: #3a3a3a; color: #fff;
@@ -174,29 +186,18 @@
         }
     }
 
-    /**
-     * MODIFIED: playSound
-     * Now loops AUDIO_LAYERS times to stack the sound waves.
-     */
     function playSound(buffer) {
         if (!audioContext) return;
 
-        // Loop to create multiple overlapping sources
         for (let i = 0; i < AUDIO_LAYERS; i++) {
             const source = audioContext.createBufferSource();
             source.buffer = buffer;
-            
             const gainNode = audioContext.createGain();
             gainNode.gain.value = VOLUME_GAIN; 
-            
             source.connect(gainNode);
             gainNode.connect(audioContext.destination);
-            
-            // Start immediately
             source.start(0);
 
-            // Only attach the 'onended' listener to the LAST layer
-            // to prevent the flag from flipping multiple times
             if (i === AUDIO_LAYERS - 1) {
                 source.onended = () => { isPlaying = false; };
             }
@@ -209,21 +210,33 @@
     async function triggerWarning(e) {
         if (!isAccepted || !areAssetsLoaded || isPlaying) return; 
 
+        // 1. Check for Overlay Interaction
+        // We must allow the user to click the consent box, otherwise they are stuck forever.
         if (e && e.target && e.target.closest('#consent-overlay')) return;
-        if (e && e.target && e.target.closest('a')) return;
+        
+        // 2. Prevent Default Browser Behavior
+        // This is crucial for stopping Context Menus, Text Selection, etc.
+        if (e) {
+            e.preventDefault();
+            e.stopPropagation();
+            if (e.stopImmediatePropagation) e.stopImmediatePropagation();
+        }
 
+        // 3. Audio Context Resume (Chrome policy)
         if (audioContext && audioContext.state === 'suspended') {
             await audioContext.resume();
         }
         
         isPlaying = true; 
 
-        // 1. Visuals
+        // 4. Visual Punishment
         textSpan.innerText = phrases[Math.floor(Math.random() * phrases.length)];
         flashOverlay.style.opacity = '1';
+        
+        // Short timeout for visual flash
         setTimeout(() => { flashOverlay.style.opacity = '0'; }, 100);
 
-        // 2. Audio
+        // 5. Audio Punishment
         let newIndex;
         do {
             newIndex = Math.floor(Math.random() * audioBuffers.length);
@@ -233,29 +246,86 @@
         if (audioBuffers[newIndex]) {
             playSound(audioBuffers[newIndex]);
         } else {
-            isPlaying = false;
+            isPlaying = false; // Reset if audio failed
         }
+        
+        return false; // Legacy return to ensure blocking
     }
 
     /* =========================================
-       6. LISTENERS
+       6. AGGRESSIVE LISTENERS
     ========================================= */
     initAudio();
 
+    // --- A. KEYBOARD: BLOCK EVERYTHING ---
+    // The "capture: true" phase ensures this runs before any other event on the page.
     window.addEventListener('keydown', (e) => {
-        if(isAccepted) triggerWarning(e);
-    });
+        if(!isAccepted) return;
 
+        // Allow F5 (Refresh) just in case they need to escape, 
+        // otherwise remove this if you want to trap them completely.
+        if (e.key === 'F5') return; 
+
+        // Trigger on ANY other key press
+        triggerWarning(e);
+    }, { capture: true });
+
+
+    // --- B. MOUSE: BLOCK RIGHT CLICK (CONTEXT MENU) ---
+    // We bind to 'contextmenu' specifically to kill the dialog box.
+    window.addEventListener('contextmenu', (e) => {
+        if(isAccepted) {
+            triggerWarning(e); 
+        }
+    }, { capture: true });
+
+
+    // --- C. MOUSE: CLICKING LOGIC ---
+    // We bind to 'mousedown' to catch the start of a click.
     window.addEventListener('mousedown', (e) => {
+        if(isAccepted) {
+            // Check if the target is an "Allowed" interactive element
+            // We look up the DOM tree in case they click a span inside an <a> tag
+            const isInteractive = e.target.closest('a, button, input, textarea, select');
+            
+            // If it is NOT interactive, or if it is a Right Click (button 2), PUNISH.
+            if (!isInteractive || e.button === 2) {
+                triggerWarning(e);
+            }
+            // If it IS interactive and a Left Click, we let it pass (do nothing).
+        }
+    }, { capture: true });
+
+
+    // --- D. SELECTION: KILL TEXT HIGHLIGHTING ---
+    // 'selectstart' fires when the user attempts to drag cursor over text.
+    window.addEventListener('selectstart', (e) => {
         if(isAccepted) triggerWarning(e);
+    }, { capture: true });
+
+
+    // --- E. DRAGGING: KILL IMAGE/ELEMENT DRAGGING ---
+    window.addEventListener('dragstart', (e) => {
+        if(isAccepted) triggerWarning(e);
+    }, { capture: true });
+
+
+    // --- F. CLIPBOARD: KILL COPY/CUT/PASTE ---
+    // Even if they bypass keyboard shortcuts via menu bar, this catches the action.
+    ['copy', 'cut', 'paste'].forEach(event => {
+        window.addEventListener(event, (e) => {
+            if(isAccepted) triggerWarning(e);
+        }, { capture: true });
     });
 
+
+    // --- G. TOUCH: MOBILE INTERACTIONS ---
     window.addEventListener('touchstart', (e) => {
         if(isAccepted && e.touches.length > 0) {
             touchStartX = e.touches[0].screenX;
             touchStartY = e.touches[0].screenY;
         }
-    }, { passive: true });
+    }, { passive: true }); // Passive allows scrolling performance
 
     window.addEventListener('touchend', (e) => {
         if(isAccepted && e.changedTouches.length > 0) {
@@ -265,8 +335,15 @@
             const diffX = Math.abs(touchEndX - touchStartX);
             const diffY = Math.abs(touchEndY - touchStartY);
 
+            // Determine if it was a Tap (Intentional click) vs a Scroll (Movement)
             if (diffX < SCROLL_THRESHOLD && diffY < SCROLL_THRESHOLD) {
-                triggerWarning(e);
+                // It was a tap. Check if it hit a valid link.
+                const isInteractive = e.target.closest('a, button, input, textarea');
+                if (!isInteractive) {
+                    // Prevent phantom clicks and trigger punishment
+                    if(e.cancelable) e.preventDefault(); 
+                    triggerWarning(e);
+                }
             }
         }
     });
