@@ -99,7 +99,7 @@
         // Hide after 250ms (1/4 second)
         hideTimeout = setTimeout(() => {
             overlay.style.opacity = '0';
-        }, 250);
+        }, 100);
     }
 
     // 5. Event Listeners
