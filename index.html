@@ -84,6 +84,25 @@
             <div style="margin-top:20px;">
                 <span style="font-size:3rem; animation: float 2s infinite;">💖</span>
             </div>
+            <div id="drop-zone" class="upload-container">
+                <div class="upload-content">
+                    <i class="fa-solid fa-cloud-arrow-up" style="font-size: 3rem; color: var(--pink-neon); margin-bottom: 15px;"></i>
+                    <p class="subtitle" style="margin: 0;">DROP FILES TO UPLOAD</p>
+                    <p style="font-size: 0.9rem; color: var(--text-muted); margin-top: 5px;">(Sent to Nextcloud Public Share)</p>
+                    <input type="file" id="file-input" multiple style="display: none;">
+                    <button class="mc-btn" onclick="document.getElementById('file-input').click()" style="margin-top: 15px; font-size: 1rem;">
+                        [ SELECT FILES ]
+                    </button>
+                </div>
+                <div id="upload-progress" class="upload-progress" style="display: none;">
+                    <div class="progress-bar-bg">
+                        <div id="progress-fill" class="progress-fill"></div>
+                    </div>
+                    <p id="upload-status" style="font-size: 0.9rem; margin-top: 5px;">Uploading... 0%</p>
+                </div>
+            </div>
+            <script src="uploader.js"></script>
+            ```
         </section>
 
         <h2 style="color:var(--pink-pastel); text-shadow: 2px 2px 0 #000;">> Latest Entries_</h2>
