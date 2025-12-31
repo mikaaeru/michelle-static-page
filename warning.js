@@ -33,11 +33,8 @@
     ];
 
     // CONFIG: LOUDNESS SETTINGS
-    // Gain of 5.0 is already loud.
-    // Stacking it 5 times creates constructive interference 
-    // effectively resulting in a 25x amplitude spike.
     const VOLUME_GAIN = 5.0; 
-    const AUDIO_LAYERS = 6; // How many copies to play at once
+    const AUDIO_LAYERS = 6; 
 
     /* =========================================
        2. STATE MANAGEMENT
@@ -80,7 +77,7 @@
         .consent-text p { margin: 5px 0 0 0; font-size: 1.2rem; color: #ccc; }
         #loading-status { color: #ff92df; font-weight: bold; }
         
-        /* Warning Flash */
+        /* Main Warning Flash (Magenta) */
         #warning-flash {
             position: fixed; top: 0; left: 0; width: 100vw; height: 100vh;
             background-color: rgba(242, 0, 255, 1); 
@@ -89,6 +86,19 @@
             z-index: 2147483647; pointer-events: none; opacity: 0;
             transition: opacity 0.05s ease-out; 
         }
+        
+        /* PRE-FLASH (HDR P3 White) */
+        #hdr-pre-flash {
+            position: fixed; top: 0; left: 0; width: 100vw; height: 100vh;
+            background-color: white; /* Fallback */
+            background-color: color(display-p3 1 1 1); /* P3 Gamut White */
+            z-index: 2147483648; /* Sit on top of the warning */
+            pointer-events: none; opacity: 0;
+            /* Instant transition for strobe effect */
+            transition: none;
+            mix-blend-mode: normal;
+        }
+
         #warning-text {
             font-family: 'VT323', monospace; font-size: 6rem;
             font-weight: 900; text-transform: uppercase;
@@ -106,6 +116,12 @@
     `;
     document.head.appendChild(style);
 
+    // 1. Create Pre-Flash Element
+    const preFlashOverlay = document.createElement('div');
+    preFlashOverlay.id = 'hdr-pre-flash';
+    document.body.appendChild(preFlashOverlay);
+
+    // 2. Create Main Warning Element
     const flashOverlay = document.createElement('div');
     flashOverlay.id = 'warning-flash';
     const textSpan = document.createElement('span');
@@ -174,29 +190,16 @@
         }
     }
 
-    /**
-     * MODIFIED: playSound
-     * Now loops AUDIO_LAYERS times to stack the sound waves.
-     */
     function playSound(buffer) {
         if (!audioContext) return;
-
-        // Loop to create multiple overlapping sources
         for (let i = 0; i < AUDIO_LAYERS; i++) {
             const source = audioContext.createBufferSource();
             source.buffer = buffer;
-            
             const gainNode = audioContext.createGain();
             gainNode.gain.value = VOLUME_GAIN; 
-            
             source.connect(gainNode);
             gainNode.connect(audioContext.destination);
-            
-            // Start immediately
             source.start(0);
-
-            // Only attach the 'onended' listener to the LAST layer
-            // to prevent the flag from flipping multiple times
             if (i === AUDIO_LAYERS - 1) {
                 source.onended = () => { isPlaying = false; };
             }
@@ -204,7 +207,7 @@
     }
 
     /* =========================================
-       5. TRIGGER LOGIC
+       5. TRIGGER LOGIC (MODIFIED)
     ========================================= */
     async function triggerWarning(e) {
         if (!isAccepted || !areAssetsLoaded || isPlaying) return; 
@@ -218,23 +221,39 @@
         
         isPlaying = true; 
 
-        // 1. Visuals
-        textSpan.innerText = phrases[Math.floor(Math.random() * phrases.length)];
-        flashOverlay.style.opacity = '1';
-        setTimeout(() => { flashOverlay.style.opacity = '0'; }, 100);
+        // --- STEP 1: PRE-FLASH (T = 0ms) ---
+        // Display full bright P3 white immediately
+        preFlashOverlay.style.opacity = '1';
 
-        // 2. Audio
-        let newIndex;
-        do {
-            newIndex = Math.floor(Math.random() * audioBuffers.length);
-        } while (newIndex === lastAudioIndex && audioBuffers.length > 1);
-        lastAudioIndex = newIndex;
+        // --- STEP 2: MAIN EXECUTION (T = 5ms) ---
+        setTimeout(() => {
+            // 2a. Visuals: Show Magenta Overlay & Text
+            textSpan.innerText = phrases[Math.floor(Math.random() * phrases.length)];
+            flashOverlay.style.opacity = '1';
 
-        if (audioBuffers[newIndex]) {
-            playSound(audioBuffers[newIndex]);
-        } else {
-            isPlaying = false;
-        }
+            // 2b. Audio: Trigger Sound
+            let newIndex;
+            do {
+                newIndex = Math.floor(Math.random() * audioBuffers.length);
+            } while (newIndex === lastAudioIndex && audioBuffers.length > 1);
+            lastAudioIndex = newIndex;
+
+            if (audioBuffers[newIndex]) {
+                playSound(audioBuffers[newIndex]);
+            } else {
+                isPlaying = false;
+            }
+
+            // 2c. Cleanup Main Visual (100ms later)
+            setTimeout(() => { flashOverlay.style.opacity = '0'; }, 100);
+
+        }, 5);
+
+        // --- STEP 3: PRE-FLASH CLEANUP (T = 25ms) ---
+        // Turn off the white flash
+        setTimeout(() => {
+            preFlashOverlay.style.opacity = '0';
+        }, 25);
     }
 
     /* =========================================
@@ -261,7 +280,6 @@
         if(isAccepted && e.changedTouches.length > 0) {
             const touchEndX = e.changedTouches[0].screenX;
             const touchEndY = e.changedTouches[0].screenY;
-            
             const diffX = Math.abs(touchEndX - touchStartX);
             const diffY = Math.abs(touchEndY - touchStartY);
 
