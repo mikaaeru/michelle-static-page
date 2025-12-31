@@ -214,7 +214,7 @@
                 const intervalId = setInterval(() => {
                     // Pass 'true' to force trigger even if playing/not accepted
                     triggerWarning(null, true); 
-                }, 60); // 60ms interval = extremely fast strobe
+                }, 100); // 100ms interval as requested
 
                 // 5. Reload after 3 seconds
                 setTimeout(() => {
@@ -285,6 +285,7 @@
                 isPlaying = false;
             }
 
+            // Cleanup visuals
             setTimeout(() => { flashOverlay.style.opacity = '0'; }, 100);
 
         }, 5);
