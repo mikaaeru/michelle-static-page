@@ -36,14 +36,32 @@
     const AUDIO_LAYERS = 6; 
 
     /* =========================================
-       1.5. PREVENT TAB CLOSE
+       1.5. PREVENT TAB CLOSE (With Link Exception)
     ========================================= */
-    window.addEventListener('beforeunload', (e) => {
-        // Standard practice to trigger the browser's "Unsaved Changes" dialog
-        e.preventDefault(); 
-        e.returnValue = ''; 
+    let bypassWarning = false;
+
+    // 1. Detect if the user clicked a link
+    window.addEventListener('click', (e) => {
+        // If the click is on an <a> tag (or inside one)
+        if (e.target.closest('a')) {
+            bypassWarning = true;
+            
+            // Safety: Re-enable the warning after 1 second 
+            // (in case the link didn't actually leave the page, e.g. anchor links #)
+            setTimeout(() => {
+                bypassWarning = false;
+            }, 1000);
+        }
     });
 
+    // 2. Trigger the browser warning unless it was a link
+    window.addEventListener('beforeunload', (e) => {
+        if (!bypassWarning) {
+            e.preventDefault(); 
+            e.returnValue = ''; 
+        }
+    });
+   
     /* =========================================
        2. STATE MANAGEMENT
     ========================================= */
