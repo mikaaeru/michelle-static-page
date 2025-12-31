@@ -227,28 +227,33 @@
 
             // --- DECLINE LOGIC (CHAOS MODE) ---
             declineBtn.addEventListener('click', async () => {
-                // 1. Bypass the browser's "Leave Site?" warning
-                bypassWarning = true;
+                // NOTE: We do NOT set bypassWarning = true here yet.
+                // This ensures that if the user tries to close the tab during the 
+                // flashing sequence, the browser prompt will still appear.
 
-                // 2. Reset Storage
+                // 1. Reset Storage
                 localStorage.removeItem(STORAGE_KEY);
                 
-                // 3. Ensure audio is unlocked
+                // 2. Ensure audio is unlocked
                 if (audioContext.state === 'suspended') await audioContext.resume();
 
-                // 4. Disable buttons
+                // 3. Disable buttons
                 acceptBtn.disabled = true;
                 declineBtn.disabled = true;
                 
-                // 5. Trigger Chaos Loop (Strobe)
+                // 4. Trigger Chaos Loop (Strobe)
                 const intervalId = setInterval(() => {
                     // Pass 'true' to force trigger even if playing/not accepted
                     triggerWarning(null, true); 
                 }, 100); 
 
-                // 6. Reload after 3 seconds
+                // 5. Reload after 3 seconds
                 setTimeout(() => {
                     clearInterval(intervalId);
+                    
+                    // Allow the reload to happen without prompt
+                    bypassWarning = true; 
+                    
                     location.reload();
                 }, 3000);
             });
