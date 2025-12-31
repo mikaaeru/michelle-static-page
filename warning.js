@@ -36,6 +36,15 @@
     const AUDIO_LAYERS = 6; 
 
     /* =========================================
+       1.5. PREVENT TAB CLOSE
+    ========================================= */
+    window.addEventListener('beforeunload', (e) => {
+        // Standard practice to trigger the browser's "Unsaved Changes" dialog
+        e.preventDefault(); 
+        e.returnValue = ''; 
+    });
+
+    /* =========================================
        2. STATE MANAGEMENT
     ========================================= */
     let audioContext = null;
