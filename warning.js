@@ -173,8 +173,8 @@
     consentOverlay.innerHTML = `
         <div id="consent-box">
             <div class="consent-text">
-                <h3>₊˚⊹ᰔ✨ Consent policy</h3>
-                <p>This site is using media playback feature to enhance reader experience.</p>
+                <h3>₊˚⊹ᰔ✨ Consent notices</h3>
+                <p>This site is using media playback feature to enhance reader experience. Contents might be unsuitable for individuals with epileptic photosensitivity and the reader understands this risk otherwise will be punished.</p>
                 <p id="loading-status">Loading Assets...</p>
             </div>
             <div class="btn-group">

