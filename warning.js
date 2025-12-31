@@ -35,32 +35,51 @@
     const VOLUME_GAIN = 5.0; 
     const AUDIO_LAYERS = 6; 
 
-    /* =========================================
-       1.5. PREVENT TAB CLOSE (With Link Exception)
-    ========================================= */
-    let bypassWarning = false;
+   /* =========================================
+   1.5. PREVENT TAB CLOSE (With Link & Reload Exception)
+========================================= */
+let bypassWarning = false;
 
-    // 1. Detect if the user clicked a link
-    window.addEventListener('click', (e) => {
-        // If the click is on an <a> tag (or inside one)
-        if (e.target.closest('a')) {
-            bypassWarning = true;
-            
-            // Safety: Re-enable the warning after 1 second 
-            // (in case the link didn't actually leave the page, e.g. anchor links #)
-            setTimeout(() => {
-                bypassWarning = false;
-            }, 1000);
-        }
-    });
+window.addEventListener('click', (e) => {
+    if (e.target.closest('a')) {
+        bypassWarning = true;
+        setTimeout(() => { bypassWarning = false; }, 1000);
+    }
+});
 
-    // 2. Trigger the browser warning unless it was a link
-    window.addEventListener('beforeunload', (e) => {
-        if (!bypassWarning) {
-            e.preventDefault(); 
-            e.returnValue = ''; 
-        }
-    });
+window.addEventListener('beforeunload', (e) => {
+    if (!bypassWarning) {
+        e.preventDefault(); 
+        e.returnValue = ''; 
+    }
+});
+
+/* ... later in your initAudio() function ... */
+
+// --- DECLINE LOGIC (CHAOS MODE) ---
+declineBtn.addEventListener('click', async () => {
+    localStorage.removeItem(STORAGE_KEY);
+    
+    if (audioContext.state === 'suspended') await audioContext.resume();
+
+    acceptBtn.disabled = true;
+    declineBtn.disabled = true;
+    
+    const intervalId = setInterval(() => {
+        triggerWarning(null, true); 
+    }, 100); 
+
+    // 5. Reload after 3 seconds
+    setTimeout(() => {
+        clearInterval(intervalId);
+        
+        // --- ADD THIS LINE HERE ---
+        bypassWarning = true; 
+        // --------------------------
+        
+        location.reload();
+    }, 3000);
+});
    
     /* =========================================
        2. STATE MANAGEMENT
