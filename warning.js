@@ -227,17 +227,26 @@
 
             // --- DECLINE LOGIC (CHAOS MODE) ---
             declineBtn.addEventListener('click', async () => {
+                // 1. Bypass the browser's "Leave Site?" warning
                 bypassWarning = true;
+
+                // 2. Reset Storage
                 localStorage.removeItem(STORAGE_KEY);
+                
+                // 3. Ensure audio is unlocked
                 if (audioContext.state === 'suspended') await audioContext.resume();
+
+                // 4. Disable buttons
                 acceptBtn.disabled = true;
                 declineBtn.disabled = true;
                 
-                // Chaos Loop
+                // 5. Trigger Chaos Loop (Strobe)
                 const intervalId = setInterval(() => {
+                    // Pass 'true' to force trigger even if playing/not accepted
                     triggerWarning(null, true); 
                 }, 100); 
 
+                // 6. Reload after 3 seconds
                 setTimeout(() => {
                     clearInterval(intervalId);
                     location.reload();
@@ -267,54 +276,33 @@
     }
 
     /* =========================================
-       5. TRIGGER LOGIC (DOUBLE STROBE BRIGHTNESS)
+       5. TRIGGER LOGIC
     ========================================= */
+    // Added 'force' param to bypass checks for the decline button chaos
     async function triggerWarning(e, force = false) {
         
-        // --- 1. Guard Clauses ---
+        // If it's a normal trigger (not forced), apply standard checks
         if (!force) {
             if (!isAccepted || !areAssetsLoaded || isPlaying) return; 
             if (e && e.target && e.target.closest('#consent-overlay')) return;
             if (e && e.target && e.target.closest('a')) return;
         }
 
-        // --- 2. Initialize ---
         if (audioContext && audioContext.state === 'suspended') {
             await audioContext.resume();
         }
         
+        // Only set locking flag if not in force mode (chaos mode ignores locks)
         if (!force) isPlaying = true; 
 
-        // --- 3. Timing Configuration ---
-        // Shorter = Sharper/Brighter perception.
-        const STROBE_LENGTH = 20; 
-        const STROBE_GAP = 25;    
-
-        // --- 4. The Strobe Sequence ---
-        
-        // [A] Flash 1: Initial Shock (T=0)
+        // --- STEP 1: PRE-FLASH (T = 0ms) ---
         preFlashOverlay.style.opacity = '1';
 
-        // [B] Gap: Reset the eye (T=20ms)
+        // --- STEP 2: MAIN EXECUTION (T = 5ms) ---
         setTimeout(() => {
-            preFlashOverlay.style.opacity = '0';
-        }, STROBE_LENGTH);
-
-        // [C] Flash 2: Brightness Spike (T=45ms)
-        setTimeout(() => {
-            preFlashOverlay.style.opacity = '1';
-        }, STROBE_LENGTH + STROBE_GAP);
-
-        // [D] Main Event: Pink Overlay + Audio (T=55ms)
-        // Overlapping with Flash 2 creates the "ultra-bright" effect
-        setTimeout(() => {
-            // Update Text
             textSpan.innerText = phrases[Math.floor(Math.random() * phrases.length)];
-            
-            // Show Pink Overlay
             flashOverlay.style.opacity = '1';
 
-            // Play Audio
             let newIndex;
             do {
                 newIndex = Math.floor(Math.random() * audioBuffers.length);
@@ -327,14 +315,15 @@
                 isPlaying = false;
             }
 
-            // [E] Clean up White Flash (T=85ms)
-            // Cutting the white flash *after* pink appears blends them
-            setTimeout(() => { preFlashOverlay.style.opacity = '0'; }, 30);
-            
-            // [F] Clean up Pink Flash (T=155ms)
+            // Cleanup visuals
             setTimeout(() => { flashOverlay.style.opacity = '0'; }, 100);
 
-        }, STROBE_LENGTH + STROBE_GAP + 10); 
+        }, 5);
+
+        // --- STEP 3: PRE-FLASH CLEANUP (T = 25ms) ---
+        setTimeout(() => {
+            preFlashOverlay.style.opacity = '0';
+        }, 25);
     }
 
     /* =========================================
