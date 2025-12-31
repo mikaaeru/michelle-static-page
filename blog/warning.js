@@ -174,12 +174,12 @@
         <div id="consent-box">
             <div class="consent-text">
                 <h3>₊˚⊹ᰔ✨ Consent notices</h3>
-                <p>This site is using media playback feature to enhance reader experience. Contents might be unsuitable for individuals with epileptic photosensitivity and the reader understands this risk otherwise will be punished.</p>
+                <p>Contents might be unsuitable for individuals with epileptic photosensitivity and the reader understands this risk, otherwise will be punished.</p>
                 <p id="loading-status">Loading Assets...</p>
             </div>
             <div class="btn-group">
                 <button id="decline-btn" class="mc-btn" disabled>DECLINE</button>
-                <button id="accept-btn" class="mc-btn" disabled>INITIALIZE</button>
+                <button id="accept-btn" class="mc-btn" disabled>INITIALIZING</button>
             </div>
         </div>
     `;
@@ -207,7 +207,7 @@
             areAssetsLoaded = true;
 
             loadText.innerText = "Assets Loaded. Choose an option.";
-            acceptBtn.innerText = "I ACCEPT";
+            acceptBtn.innerText = "ACCEPT";
             
             // Enable both buttons
             acceptBtn.disabled = false;
