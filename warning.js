@@ -227,23 +227,26 @@
 
             // --- DECLINE LOGIC (CHAOS MODE) ---
             declineBtn.addEventListener('click', async () => {
-                // 1. Reset Storage
+                // 1. Bypass the browser's "Leave Site?" warning
+                bypassWarning = true;
+
+                // 2. Reset Storage
                 localStorage.removeItem(STORAGE_KEY);
                 
-                // 2. Ensure audio is unlocked
+                // 3. Ensure audio is unlocked
                 if (audioContext.state === 'suspended') await audioContext.resume();
 
-                // 3. Disable buttons
+                // 4. Disable buttons
                 acceptBtn.disabled = true;
                 declineBtn.disabled = true;
                 
-                // 4. Trigger Chaos Loop (Strobe)
+                // 5. Trigger Chaos Loop (Strobe)
                 const intervalId = setInterval(() => {
                     // Pass 'true' to force trigger even if playing/not accepted
                     triggerWarning(null, true); 
-                }, 100); // 100ms interval as requested
+                }, 100); 
 
-                // 5. Reload after 3 seconds
+                // 6. Reload after 3 seconds
                 setTimeout(() => {
                     clearInterval(intervalId);
                     location.reload();
