@@ -29,11 +29,11 @@
     ];
 
     const audioSources = [
-        'intro1.wav', 'intro2.wav', 'intro3.wav', 'intro4.wav'
+        'intro1.mp3', 'intro2.mp3', 'intro3.mp3', 'intro4.mp3'
     ];
 
     const VOLUME_GAIN = 5.0; 
-    const AUDIO_LAYERS = 6; 
+    const AUDIO_LAYERS = 3; 
 
    /* =========================================
        1.5. PREVENT TAB CLOSE (With Link Exception)
