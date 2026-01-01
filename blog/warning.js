@@ -29,7 +29,7 @@
     ];
 
     const audioSources = [
-        'intro1.mp3', 'intro2.mp3', 'intro3.mp3', 'intro4.mp3'
+        'intro1.mp3', 'intro2.mp3', 'intro3.mp3', 'intro4.mp3', 'intro5.mp3', 'intro6.mp3', 'intro7.mp3', 'intro8.mp3'
     ];
 
     const VOLUME_GAIN = 5.0; 
