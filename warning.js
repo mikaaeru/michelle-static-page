@@ -33,7 +33,7 @@
     ];
 
     const VOLUME_GAIN = 5.0; 
-    const AUDIO_LAYERS = 3; 
+    const AUDIO_LAYERS = 6; 
 
    /* =========================================
        1.5. PREVENT TAB CLOSE (With Link Exception)
