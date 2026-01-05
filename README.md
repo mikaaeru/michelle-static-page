@@ -1,4 +1,4 @@
-# 🌸 MY STUPID CODE 🌸
+# 🌸 MY STUPID SLOP OF CODES 🌸
 
 ### ⚠️ Please, GTFO I'm stupid
 
