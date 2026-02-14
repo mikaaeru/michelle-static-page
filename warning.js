@@ -174,7 +174,7 @@
         <div id="consent-box">
             <div class="consent-text">
                 <h3>₊˚⊹ᰔ✨ Consent notices</h3>
-                <p>Contents might be unsuitable for individuals with epileptic photosensitivity and the reader understands this risk, otherwise will be punished.</p>
+                <p>Contents and "consent reject" might be unsuitable for individuals with epileptic photosensitivity. By agreeing, you consent loading web resources that will not save your private informations, and exposure of contents mentioned previously. If you click reject, contents mentioned will be displayed at increased intensity.</p>
                 <p id="loading-status">Loading Assets...</p>
             </div>
             <div class="btn-group">
