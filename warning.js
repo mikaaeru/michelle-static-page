@@ -173,8 +173,8 @@
     consentOverlay.innerHTML = `
         <div id="consent-box">
             <div class="consent-text">
-                <h3>₊˚⊹ᰔ✨ Consent notices</h3>
-                <p>Contents and "consent reject" might be unsuitable for individuals with epileptic photosensitivity. By agreeing, you consent loading web resources that will not save your private informations, and exposure of contents mentioned previously. If you click reject, contents mentioned will be displayed at increased intensity.</p>
+                <h5>₊˚⊹ᰔ✨ Consent notices</h3>
+                <p>Web contents including the "consent decline button" and all resources including images, texts, audio, and etc, might be unsuitable for individuals with epileptic photosensitivity. By agreeing, you consent loading such web resources without any forms of data collection on behalf kamikami.eu's except for our hosting service provider (Cloudflare, Inc) for statistical analysis, and exposure of contents mentioned previously. If you click reject, contents mentioned will be displayed at increased intensity.</p>
                 <p id="loading-status">Loading Assets...</p>
             </div>
             <div class="btn-group">
