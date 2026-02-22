@@ -1,31 +1,23 @@
 (function() {
-    /* =========================================
-       1. CONFIGURATION
-    ========================================= */
     const STORAGE_KEY = 'system_warning_consent'; 
     const SCROLL_THRESHOLD = 10; 
 
     const phrases = [
-        // English
         "STOP", "DON'T TOUCH", "NO!", "YAMETEEEEEE!", 
         "DAME!", "BAKA!", "ERROR", "FATAL", "FORBIDDEN",
         "ASU", "KYAAAAA!", "ANJING", "BUTO", "BABI", "PUKIMAK", "ANJING",
-        
-        // Japanese
-        "やめて!",      // Stop!
-        "触らないで!",  // Don't touch!
-        "ダメ!",       // No/Bad!
-        "うるさい!",    // Shut up/Noisy!
-        "警告",        // Warning
-        "エラー",      // Error
-        
-        // Chinese
-        "不要!",       // Don't!
-        "禁止",        // Forbidden
-        "错误",        // Error
-        "停下",        // Stop
-        "住手",        // Stop your hand
-        "别碰"         // Don't touch 
+        "やめて!",      
+        "触らないで!",  
+        "ダメ!",       
+        "うるさい!",    
+        "警告",        
+        "エラー",      
+        "不要!",       
+        "禁止",        
+        "错误",       
+        "停下",        
+        "住手",        
+        "别碰"         
     ];
 
     const audioSources = [
@@ -35,26 +27,18 @@
     const VOLUME_GAIN = 5.0; 
     const AUDIO_LAYERS = 6; 
 
-   /* =========================================
-       1.5. PREVENT TAB CLOSE (With Link Exception)
-    ========================================= */
     let bypassWarning = false;
 
-    // 1. Detect if the user clicked a link
     window.addEventListener('click', (e) => {
-        // If the click is on an <a> tag (or inside one)
         if (e.target.closest('a')) {
             bypassWarning = true;
             
-            // Safety: Re-enable the warning after 1 second 
-            // (in case the link didn't actually leave the page, e.g. anchor links #)
             setTimeout(() => {
                 bypassWarning = false;
             }, 1000);
         }
     });
 
-    // 2. Trigger the browser warning unless it was a link
     window.addEventListener('beforeunload', (e) => {
         if (!bypassWarning) {
             e.preventDefault(); 
@@ -62,9 +46,6 @@
         }
     });
    
-    /* =========================================
-       2. STATE MANAGEMENT
-    ========================================= */
     let audioContext = null;
     let audioBuffers = [];
     let isPlaying = false; 
@@ -77,9 +58,6 @@
 
     const hasPriorConsent = localStorage.getItem(STORAGE_KEY) === 'true';
 
-    /* =========================================
-       3. UI & CSS INJECTION
-    ========================================= */
     const style = document.createElement('style');
     style.innerHTML = `
         /* Overlay styles */
@@ -185,9 +163,6 @@
     `;
     document.body.appendChild(consentOverlay);
 
-    /* =========================================
-       4. AUDIO ENGINE (Web Audio API)
-    ========================================= */
     async function initAudio() {
         const AudioContext = window.AudioContext || window.webkitAudioContext;
         audioContext = new AudioContext();
@@ -209,11 +184,9 @@
             loadText.innerText = "Assets Loaded. Choose an option.";
             acceptBtn.innerText = "ACCEPT";
             
-            // Enable both buttons
             acceptBtn.disabled = false;
             declineBtn.disabled = false;
             
-            // --- ACCEPT LOGIC ---
             acceptBtn.addEventListener('click', () => {
                 if (audioContext.state === 'suspended') audioContext.resume();
                 localStorage.setItem(STORAGE_KEY, 'true');
@@ -225,35 +198,20 @@
                 }, 300);
             });
 
-            // --- DECLINE LOGIC (CHAOS MODE) ---
             declineBtn.addEventListener('click', async () => {
-                // NOTE: We do NOT set bypassWarning = true here yet.
-                // This ensures that if the user tries to close the tab during the 
-                // flashing sequence, the browser prompt will still appear.
-
-                // 1. Reset Storage
+           
                 localStorage.removeItem(STORAGE_KEY);
-                
-                // 2. Ensure audio is unlocked
                 if (audioContext.state === 'suspended') await audioContext.resume();
-
-                // 3. Disable buttons
                 acceptBtn.disabled = true;
                 declineBtn.disabled = true;
                 
-                // 4. Trigger Chaos Loop (Strobe)
                 const intervalId = setInterval(() => {
-                    // Pass 'true' to force trigger even if playing/not accepted
                     triggerWarning(null, true); 
                 }, 100); 
 
-                // 5. Reload after 3 seconds
                 setTimeout(() => {
                     clearInterval(intervalId);
-                    
-                    // Allow the reload to happen without prompt
                     bypassWarning = true; 
-                    
                     location.reload();
                 }, 3000);
             });
@@ -280,13 +238,8 @@
         }
     }
 
-    /* =========================================
-       5. TRIGGER LOGIC
-    ========================================= */
-    // Added 'force' param to bypass checks for the decline button chaos
+    
     async function triggerWarning(e, force = false) {
-        
-        // If it's a normal trigger (not forced), apply standard checks
         if (!force) {
             if (!isAccepted || !areAssetsLoaded || isPlaying) return; 
             if (e && e.target && e.target.closest('#consent-overlay')) return;
@@ -320,20 +273,15 @@
                 isPlaying = false;
             }
 
-            // Cleanup visuals
             setTimeout(() => { flashOverlay.style.opacity = '0'; }, 100);
 
         }, 5);
-
-        // --- STEP 3: PRE-FLASH CLEANUP (T = 25ms) ---
         setTimeout(() => {
             preFlashOverlay.style.opacity = '0';
         }, 25);
     }
 
-    /* =========================================
-       6. LISTENERS
-    ========================================= */
+    
     initAudio();
 
     window.addEventListener('keydown', (e) => {
