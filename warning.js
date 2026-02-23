@@ -3,7 +3,7 @@
     const SCROLL_THRESHOLD = 10; 
 
     const phrases = [
-        "STOP", "DON'T TOUCH", "NO!", "YAMETEEEEEE!", 
+        "STOP", "DON'T TOUCH", "NO!", "YAMETEEEEEE!", "ANTEK ANTEK ASING", "PECINTA SAWIT", "BoPPING",
         "DAME!", "BAKA!", "ERROR", "FATAL", "FORBIDDEN",
         "ASU", "KYAAAAA!", "ANJING", "BUTO", "BABI", "PUKIMAK", "ANJING",
         "やめて!",      
