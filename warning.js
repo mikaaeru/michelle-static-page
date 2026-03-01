@@ -7,7 +7,7 @@
     ];
 
     const audioSources = [
-        'prabowo.mp3', 'gibran.mp3', 'hai.mp3', 'antek2asing.mp3', 'koruptor.mp3', 'maling.mp3', 'hai1.mp3', 'hai2.mp3', 'hai3.mp3'
+        'prabowo.mp3', 'gibran.mp3', 'hai.mp3', 'antek2asing.mp3', 'koruptor.mp3', 'maling.mp3', 'hai1.mp3'
     ];
 
     const VOLUME_GAIN = 2.0; 
