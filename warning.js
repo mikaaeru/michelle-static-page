@@ -3,21 +3,7 @@
     const SCROLL_THRESHOLD = 10; 
 
     const phrases = [
-        "STOP", "DON'T TOUCH", "NO!", "YAMETEEEEEE!", "ANTEK ANTEK ASING", "PECINTA SAWIT", "BoPPING",
-        "DAME!", "BAKA!", "ERROR", "FATAL", "FORBIDDEN",
-        "ASU", "KYAAAAA!", "ANJING", "BUTO", "BABI", "PUKIMAK", "ANJING",
-        "やめて!",      
-        "触らないで!",  
-        "ダメ!",       
-        "うるさい!",    
-        "警告",        
-        "エラー",      
-        "不要!",       
-        "禁止",        
-        "错误",       
-        "停下",        
-        "住手",        
-        "别碰"         
+        "STOP", "PILIH PRABOWO GIBRAN", "PILIH NOMOR 2!", "HAIIIIIIII!", "ANTEK ANTEK ASING", "PECINTA SAWIT"       
     ];
 
     const audioSources = [

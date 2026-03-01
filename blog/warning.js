@@ -6,26 +6,7 @@
     const SCROLL_THRESHOLD = 10; 
 
     const phrases = [
-        // English
-        "STOP", "DON'T TOUCH", "NO!", "YAMETEEEEEE!", 
-        "DAME!", "BAKA!", "ERROR", "FATAL", "FORBIDDEN",
-        "ASU", "KYAAAAA!", "ANJING", "BUTO", "BABI", "PUKIMAK", "ANJING",
-        
-        // Japanese
-        "やめて!",      // Stop!
-        "触らないで!",  // Don't touch!
-        "ダメ!",       // No/Bad!
-        "うるさい!",    // Shut up/Noisy!
-        "警告",        // Warning
-        "エラー",      // Error
-        
-        // Chinese
-        "不要!",       // Don't!
-        "禁止",        // Forbidden
-        "错误",        // Error
-        "停下",        // Stop
-        "住手",        // Stop your hand
-        "别碰"         // Don't touch 
+        "STOP", "PILIH PRABOWO GIBRAN", "PILIH NOMOR 2!", "HAIIIIIIII!", "ANTEK ANTEK ASING", "PECINTA SAWIT"       
     ];
 
     const audioSources = [
