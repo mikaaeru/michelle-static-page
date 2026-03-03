@@ -15,16 +15,15 @@
 
     let bypassWarning = false;
 
+    // Global link bypass
     window.addEventListener('click', (e) => {
         if (e.target.closest('a')) {
             bypassWarning = true;
-            
-            setTimeout(() => {
-                bypassWarning = false;
-            }, 1000);
+            setTimeout(() => { bypassWarning = false; }, 1000);
         }
     });
 
+    // The "Are you sure you want to leave?" logic
     window.addEventListener('beforeunload', (e) => {
         if (!bypassWarning) {
             e.preventDefault(); 
@@ -46,7 +45,6 @@
 
     const style = document.createElement('style');
     style.innerHTML = `
-        /* Overlay styles */
         #consent-overlay {
             position: fixed; top: 0; left: 0; width: 100vw; height: 100vh;
             backdrop-filter: blur(8px); -webkit-backdrop-filter: blur(8px);
@@ -57,74 +55,78 @@
         }
         #consent-box {
             background-color: #3a3a3a; color: #fff;
-            width: 90%; max-width: 900px; padding: 20px;
+            width: 90%; max-width: 900px; 
             border: 4px solid #000;
-            box-shadow: inset 4px 4px 0 rgba(255,255,255,0.1), inset -4px -4px 0 rgba(0,0,0,0.2), 0 10px 25px rgba(0,0,0,0.5);   
-            display: flex; align-items: center; justify-content: space-between;
-            gap: 20px; font-family: 'VT323', monospace;
+            box-shadow: 0 10px 25px rgba(0,0,0,0.5);   
+            display: flex; flex-direction: column; /* Changed to column for stacking */
+            font-family: 'VT323', monospace;
+            overflow: hidden;
+        }
+        .consent-content-wrapper {
+            padding: 20px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 20px;
         }
         .consent-text h3 { margin: 0; color: #ff6ec7; font-size: 1.8rem; text-transform: uppercase; text-shadow: 2px 2px 0 #000; }
-        .consent-text p { margin: 5px 0 0 0; font-size: 1.2rem; color: #ccc; }
+        .consent-text p { margin: 5px 0 0 0; font-size: 1.1rem; color: #ccc; }
         #loading-status { color: #ff92df; font-weight: bold; }
-
-        /* Container for the buttons on the right */
-        .action-container { display: flex; flex-direction: column; gap: 15px; min-width: 250px; }
 
         .btn-group { display: flex; gap: 10px; }
         .mc-btn {
             background: #000; color: #fff; border: 2px solid #fff;
             padding: 10px 20px; font-family: inherit; font-size: 1.2rem;
             cursor: pointer; text-transform: uppercase;
-            transition: all 0.1s;
         }
         .mc-btn:hover:not(:disabled) { background: #fff; color: #000; }
         .mc-btn:disabled { opacity: 0.5; cursor: wait; }
 
-        /* The Big Blog Button Style */
-        .blog-btn {
+        /* Full-width Blog Bar */
+        .blog-bar-btn {
             width: 100%;
             background: #5b5bff;
-            border-color: #fff;
+            color: #fff;
+            border: none;
+            border-top: 4px solid #000;
+            padding: 15px;
+            font-family: inherit;
+            font-size: 1.5rem;
             font-weight: bold;
-            box-shadow: 4px 4px 0px #000;
+            cursor: pointer;
+            text-transform: uppercase;
+            transition: background 0.2s;
         }
-        .blog-btn:hover { background: #7c7cff !important; color: white !important; transform: translateY(-2px); }
+        .blog-bar-btn:hover { background: #7c7cff; }
         
-        /* Main Warning Flash (Magenta) */
         #warning-flash {
             position: fixed; top: 0; left: 0; width: 100vw; height: 100vh;
             background-color: rgba(242, 0, 255, 1); 
-            backdrop-filter: blur(15px); -webkit-backdrop-filter: blur(15px);
-            color: #ffffff; display: flex; justify-content: center; align-items: center;
             z-index: 2147483647; pointer-events: none; opacity: 0;
-            transition: opacity 0.05s ease-out; 
+            display: flex; justify-content: center; align-items: center;
         }
         
-        /* PRE-FLASH (HDR P3 White) */
         #hdr-pre-flash {
             position: fixed; top: 0; left: 0; width: 100vw; height: 100vh;
             background-color: white; 
-            background-color: color(display-p3 1 1 1); 
-            z-index: 2147483648; 
-            pointer-events: none; opacity: 0;
-            transition: none;
-            mix-blend-mode: normal;
+            z-index: 2147483648; pointer-events: none; opacity: 0;
         }
 
         #warning-text {
             font-family: 'VT323', monospace; font-size: 6rem;
             font-weight: 900; text-transform: uppercase;
-            text-shadow: 0 0 20px rgba(255, 0, 0, 0.8), 4px 4px 0px #000;
+            text-shadow: 4px 4px 0px #000;
             animation: shake 0.1s infinite;
         }
+
         @media (max-width: 600px) {
-            #consent-box { flex-direction: column; text-align: center; }
+            .consent-content-wrapper { flex-direction: column; text-align: center; }
             .btn-group { width: 100%; flex-direction: column; }
-            .action-container { width: 100%; }
+            .btn-group button { width: 100%; }
         }
         @keyframes shake {
-            0% { transform: translate(2px, 2px) rotate(0deg); }
-            100% { transform: translate(-2px, -2px) rotate(-2deg); }
+            0% { transform: translate(2px, 2px); }
+            100% { transform: translate(-2px, -2px); }
         }
     `;
     document.head.appendChild(style);
@@ -150,18 +152,18 @@
 
     consentOverlay.innerHTML = `
         <div id="consent-box">
-            <div class="consent-text">
-                <h3>₊˚⊹ᰔ✨ Consent notices</h3>
-                <p>Web contents including the "consent decline button" and all resources including images, texts, audio, and etc, might be unsuitable for individuals with epileptic photosensitivity. By agreeing, you consent loading such web resources without any forms of data collection on behalf kamikami.eu's except for our hosting service provider (Cloudflare, Inc) for statistical analysis, and exposure of contents mentioned previously. If you click reject, contents mentioned will be displayed at increased intensity.</p>
-                <p id="loading-status">Loading Assets...</p>
-            </div>
-            <div class="action-container">
+            <div class="consent-content-wrapper">
+                <div class="consent-text">
+                    <h3>₊˚⊹ᰔ✨ Consent notices</h3>
+                    <p>Web contents may be unsuitable for individuals with epileptic photosensitivity. Agreeing loads resources without data collection (excluding Cloudflare stats). Rejecting displays contents at increased intensity.</p>
+                    <p id="loading-status">Loading Assets...</p>
+                </div>
                 <div class="btn-group">
                     <button id="decline-btn" class="mc-btn" disabled>DECLINE</button>
                     <button id="accept-btn" class="mc-btn" disabled>INITIALIZING</button>
                 </div>
-                <button id="blog-btn" class="mc-btn blog-btn">➜ VISIT BLOG</button>
             </div>
+            <button id="blog-bar-btn" class="blog-bar-btn">➜ VISIT BLOG (KAMIKAMI.EU)</button>
         </div>
     `;
     document.body.appendChild(consentOverlay);
@@ -172,11 +174,12 @@
 
         const acceptBtn = document.getElementById('accept-btn');
         const declineBtn = document.getElementById('decline-btn');
-        const blogBtn = document.getElementById('blog-btn');
+        const blogBtn = document.getElementById('blog-bar-btn');
         const loadText = document.getElementById('loading-status');
 
-        // Blog button is always functional
+        // Handles blog redirect and excludes it from the exit warning
         blogBtn.addEventListener('click', () => {
+            bypassWarning = true;
             window.location.href = 'https://blog.kamikami.eu';
         });
 
@@ -190,16 +193,14 @@
             audioBuffers = await Promise.all(decodePromises);
             areAssetsLoaded = true;
 
-            loadText.innerText = "Assets Loaded. Choose an option.";
+            loadText.innerText = "Assets Loaded.";
             acceptBtn.innerText = "ACCEPT";
-            
             acceptBtn.disabled = false;
             declineBtn.disabled = false;
             
             acceptBtn.addEventListener('click', () => {
                 if (audioContext.state === 'suspended') audioContext.resume();
                 localStorage.setItem(STORAGE_KEY, 'true');
-
                 consentOverlay.style.opacity = '0';
                 setTimeout(() => {
                     consentOverlay.style.display = 'none';
@@ -213,10 +214,7 @@
                 acceptBtn.disabled = true;
                 declineBtn.disabled = true;
                 
-                const intervalId = setInterval(() => {
-                    triggerWarning(null, true); 
-                }, 100); 
-
+                const intervalId = setInterval(() => { triggerWarning(null, true); }, 100); 
                 setTimeout(() => {
                     clearInterval(intervalId);
                     bypassWarning = true; 
@@ -226,7 +224,6 @@
 
         } catch (error) {
             loadText.innerText = "Failed to load audio.";
-            console.error(error);
         }
     }
 
@@ -249,69 +246,39 @@
     async function triggerWarning(e, force = false) {
         if (!force) {
             if (!isAccepted || !areAssetsLoaded || isPlaying) return; 
-            if (e && e.target && e.target.closest('#consent-overlay')) return;
-            if (e && e.target && e.target.closest('a')) return;
+            if (e && e.target && (e.target.closest('#consent-overlay') || e.target.closest('a'))) return;
         }
 
-        if (audioContext && audioContext.state === 'suspended') {
-            await audioContext.resume();
-        }
-        
+        if (audioContext && audioContext.state === 'suspended') await audioContext.resume();
         if (!force) isPlaying = true; 
 
         preFlashOverlay.style.opacity = '1';
-
         setTimeout(() => {
             textSpan.innerText = phrases[Math.floor(Math.random() * phrases.length)];
             flashOverlay.style.opacity = '1';
-
-            let newIndex;
-            do {
-                newIndex = Math.floor(Math.random() * audioBuffers.length);
-            } while (newIndex === lastAudioIndex && audioBuffers.length > 1);
-            lastAudioIndex = newIndex;
-
-            if (audioBuffers[newIndex]) {
-                playSound(audioBuffers[newIndex]);
-            } else {
-                isPlaying = false;
-            }
-
+            let newIndex = Math.floor(Math.random() * audioBuffers.length);
+            if (audioBuffers[newIndex]) playSound(audioBuffers[newIndex]);
             setTimeout(() => { flashOverlay.style.opacity = '0'; }, 100);
-
         }, 5);
-        setTimeout(() => {
-            preFlashOverlay.style.opacity = '0';
-        }, 25);
+        setTimeout(() => { preFlashOverlay.style.opacity = '0'; }, 25);
     }
 
     initAudio();
 
-    window.addEventListener('keydown', (e) => {
-        if(isAccepted) triggerWarning(e);
-    });
-
-    window.addEventListener('mousedown', (e) => {
-        if(isAccepted) triggerWarning(e);
-    });
-
+    // Trigger handlers
+    window.addEventListener('keydown', (e) => isAccepted && triggerWarning(e));
+    window.addEventListener('mousedown', (e) => isAccepted && triggerWarning(e));
     window.addEventListener('touchstart', (e) => {
         if(isAccepted && e.touches.length > 0) {
             touchStartX = e.touches[0].screenX;
             touchStartY = e.touches[0].screenY;
         }
     }, { passive: true });
-
     window.addEventListener('touchend', (e) => {
         if(isAccepted && e.changedTouches.length > 0) {
-            const touchEndX = e.changedTouches[0].screenX;
-            const touchEndY = e.changedTouches[0].screenY;
-            const diffX = Math.abs(touchEndX - touchStartX);
-            const diffY = Math.abs(touchEndY - touchStartY);
-
-            if (diffX < SCROLL_THRESHOLD && diffY < SCROLL_THRESHOLD) {
-                triggerWarning(e);
-            }
+            const diffX = Math.abs(e.changedTouches[0].screenX - touchStartX);
+            const diffY = Math.abs(e.changedTouches[0].screenY - touchStartY);
+            if (diffX < SCROLL_THRESHOLD && diffY < SCROLL_THRESHOLD) triggerWarning(e);
         }
     });
 
