@@ -163,7 +163,7 @@
                     <button id="accept-btn" class="mc-btn" disabled>INITIALIZING</button>
                 </div>
             </div>
-            <button id="blog-bar-btn" class="blog-bar-btn">➜ VISIT BLOG (KAMIKAMI.EU)</button>
+            <button id="blog-bar-btn" class="blog-bar-btn">➜ VISIT BLOG NOW! (NEW)</button>
         </div>
     `;
     document.body.appendChild(consentOverlay);
