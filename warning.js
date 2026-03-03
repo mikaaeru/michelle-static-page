@@ -67,14 +67,28 @@
         .consent-text p { margin: 5px 0 0 0; font-size: 1.2rem; color: #ccc; }
         #loading-status { color: #ff92df; font-weight: bold; }
 
+        /* Container for the buttons on the right */
+        .action-container { display: flex; flex-direction: column; gap: 15px; min-width: 250px; }
+
         .btn-group { display: flex; gap: 10px; }
         .mc-btn {
             background: #000; color: #fff; border: 2px solid #fff;
             padding: 10px 20px; font-family: inherit; font-size: 1.2rem;
             cursor: pointer; text-transform: uppercase;
+            transition: all 0.1s;
         }
         .mc-btn:hover:not(:disabled) { background: #fff; color: #000; }
         .mc-btn:disabled { opacity: 0.5; cursor: wait; }
+
+        /* The Big Blog Button Style */
+        .blog-btn {
+            width: 100%;
+            background: #5b5bff;
+            border-color: #fff;
+            font-weight: bold;
+            box-shadow: 4px 4px 0px #000;
+        }
+        .blog-btn:hover { background: #7c7cff !important; color: white !important; transform: translateY(-2px); }
         
         /* Main Warning Flash (Magenta) */
         #warning-flash {
@@ -106,7 +120,7 @@
         @media (max-width: 600px) {
             #consent-box { flex-direction: column; text-align: center; }
             .btn-group { width: 100%; flex-direction: column; }
-            #consent-box button { width: 100%; }
+            .action-container { width: 100%; }
         }
         @keyframes shake {
             0% { transform: translate(2px, 2px) rotate(0deg); }
@@ -138,12 +152,15 @@
         <div id="consent-box">
             <div class="consent-text">
                 <h3>₊˚⊹ᰔ✨ Consent notices</h3>
-                <h6>Web contents including the "consent decline button" and all resources including images, texts, audio, and etc, might be unsuitable for individuals with epileptic photosensitivity. By agreeing, you consent loading such web resources without any forms of data collection on behalf kamikami.eu's except for our hosting service provider (Cloudflare, Inc) for statistical analysis, and exposure of contents mentioned previously. If you click reject, contents mentioned will be displayed at increased intensity.</p>
-                <p id="loading-status">Loading Assets...</h6>
+                <p>Web contents including the "consent decline button" and all resources including images, texts, audio, and etc, might be unsuitable for individuals with epileptic photosensitivity. By agreeing, you consent loading such web resources without any forms of data collection on behalf kamikami.eu's except for our hosting service provider (Cloudflare, Inc) for statistical analysis, and exposure of contents mentioned previously. If you click reject, contents mentioned will be displayed at increased intensity.</p>
+                <p id="loading-status">Loading Assets...</p>
             </div>
-            <div class="btn-group">
-                <button id="decline-btn" class="mc-btn" disabled>DECLINE</button>
-                <button id="accept-btn" class="mc-btn" disabled>INITIALIZING</button>
+            <div class="action-container">
+                <div class="btn-group">
+                    <button id="decline-btn" class="mc-btn" disabled>DECLINE</button>
+                    <button id="accept-btn" class="mc-btn" disabled>INITIALIZING</button>
+                </div>
+                <button id="blog-btn" class="mc-btn blog-btn">➜ VISIT BLOG</button>
             </div>
         </div>
     `;
@@ -155,7 +172,13 @@
 
         const acceptBtn = document.getElementById('accept-btn');
         const declineBtn = document.getElementById('decline-btn');
+        const blogBtn = document.getElementById('blog-btn');
         const loadText = document.getElementById('loading-status');
+
+        // Blog button is always functional
+        blogBtn.addEventListener('click', () => {
+            window.location.href = 'https://blog.kamikami.eu';
+        });
 
         try {
             const fetchPromises = audioSources.map(src => fetch(src));
@@ -185,7 +208,6 @@
             });
 
             declineBtn.addEventListener('click', async () => {
-           
                 localStorage.removeItem(STORAGE_KEY);
                 if (audioContext.state === 'suspended') await audioContext.resume();
                 acceptBtn.disabled = true;
@@ -224,7 +246,6 @@
         }
     }
 
-    
     async function triggerWarning(e, force = false) {
         if (!force) {
             if (!isAccepted || !areAssetsLoaded || isPlaying) return; 
@@ -236,13 +257,10 @@
             await audioContext.resume();
         }
         
-        // Only set locking flag if not in force mode (chaos mode ignores locks)
         if (!force) isPlaying = true; 
 
-        // --- STEP 1: PRE-FLASH (T = 0ms) ---
         preFlashOverlay.style.opacity = '1';
 
-        // --- STEP 2: MAIN EXECUTION (T = 5ms) ---
         setTimeout(() => {
             textSpan.innerText = phrases[Math.floor(Math.random() * phrases.length)];
             flashOverlay.style.opacity = '1';
@@ -267,7 +285,6 @@
         }, 25);
     }
 
-    
     initAudio();
 
     window.addEventListener('keydown', (e) => {
