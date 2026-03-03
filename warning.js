@@ -154,7 +154,7 @@
         <div id="consent-box">
             <div class="consent-content-wrapper">
                 <div class="consent-text">
-                    <h3>₊˚⊹ᰔ✨ FLASHING LIGHTS NOTICE!</h3>
+                    <h3 style="color: #FF0000;">₊˚⊹ᰔ✨ FLASHING LIGHTS NOTICE!</h3>
                     <p>Web contents may be unsuitable for individuals with epileptic photosensitivity. Agreeing loads resources without data collection (excluding Cloudflare stats). Rejecting displays contents at increased intensity.</p>
                     <p id="loading-status">Loading Assets...</p>
                 </div>
