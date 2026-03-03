@@ -154,12 +154,12 @@
         <div id="consent-box">
             <div class="consent-content-wrapper">
                 <div class="consent-text">
-                    <h3>₊˚⊹ᰔ✨ Consent notices</h3>
+                    <h3>₊˚⊹ᰔ✨ FLASHING LIGHTS NOTICE!</h3>
                     <p>Web contents may be unsuitable for individuals with epileptic photosensitivity. Agreeing loads resources without data collection (excluding Cloudflare stats). Rejecting displays contents at increased intensity.</p>
                     <p id="loading-status">Loading Assets...</p>
                 </div>
                 <div class="btn-group">
-                    <button id="decline-btn" class="mc-btn" disabled>DECLINE</button>
+                    <button id="decline-btn" class="mc-btn" style="color: red; opacity: 1;" disabled>DECLINE</button>
                     <button id="accept-btn" class="mc-btn" disabled>INITIALIZING</button>
                 </div>
             </div>
